@@ -38,15 +38,23 @@ M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
 ### W1（2026-05-22 ~ 05-28）：安裝 + GDScript 起步
 
 - 目標時數：10-15 hr
-- [ ] 裝 Godot 4.6.2 Standard + VSCode + Godot Tools 擴充
+- [x] 裝 Godot 4.6.2 Standard（實際裝 4.6.3.stable，同系列）
+- [ ] VSCode Godot Tools 擴充（VSCode 已有，擴充待裝）
 - [ ] 看完 Godot Docs - Getting Started（philosophy / nodes / signals）
-- [ ] Hello world：按鈕 → console print
+- [x] Hello world：按鈕 → console print
 - [ ] GDScript 練 100 行（fizzbuzz / 排序 / class）
 - [ ] 週末 retro：3 行心得寫在下方
 
 週記：
 
 ```
+Day 2（2026-05-23）即時筆記：
+- 完成 Godot 4.6.3 安裝 + 第一個 hello world（Control + Button + button.gd）
+- 觀念：場景樹 ≈ Vue 組件樹；signal (pressed.connect) ≈ event emit；.tscn 場景與 .gd 腳本分離
+- GDScript 對應：func ≈ function、_ready ≈ mounted、@onready 之後練、type hint 用 : 寫
+- 卡點：無；hello world 一次過
+- 下一步：裝 VSCode Godot Tools 擴充 → GDScript 100 行練習（fizzbuzz / 排序 / class）
+
 （每週做完寫 1-3 行：學到什麼、卡哪裡、下週調整）
 ```
 
