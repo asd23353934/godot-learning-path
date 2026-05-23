@@ -39,10 +39,10 @@ M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
 
 - 目標時數：10-15 hr
 - [x] 裝 Godot 4.6.2 Standard（實際裝 4.6.3.stable，同系列）
-- [ ] VSCode Godot Tools 擴充（VSCode 已有，擴充待裝）
+- [x] VSCode Godot Tools 擴充（geequlim 出的；雙擊 .gd 可跳 VSCode 開啟）
 - [ ] 看完 Godot Docs - Getting Started（philosophy / nodes / signals）
 - [x] Hello world：按鈕 → console print
-- [ ] GDScript 練 100 行（fizzbuzz / 排序 / class）
+- [x] GDScript 練 100 行（fizzbuzz / 排序 / class）
 - [ ] 週末 retro：3 行心得寫在下方
 
 週記：
@@ -52,8 +52,19 @@ Day 2（2026-05-23）即時筆記：
 - 完成 Godot 4.6.3 安裝 + 第一個 hello world（Control + Button + button.gd）
 - 觀念：場景樹 ≈ Vue 組件樹；signal (pressed.connect) ≈ event emit；.tscn 場景與 .gd 腳本分離
 - GDScript 對應：func ≈ function、_ready ≈ mounted、@onready 之後練、type hint 用 : 寫
-- 卡點：無；hello world 一次過
-- 下一步：裝 VSCode Godot Tools 擴充 → GDScript 100 行練習（fizzbuzz / 排序 / class）
+- 完成 VSCode Godot Tools 擴充 + practice.gd 三題全過（FizzBuzz / Bubble Sort / Card class）
+- GDScript 觀念：
+  · 沒有 import：class_name 自動全域註冊（class_name Card + extends RefCounted）
+  · Array 是 reference type，函式內改外面看得到，不用 return
+  · sort_custom 的 callable 回傳 bool（a 該在前嗎），不是 JS 的 a-b 數字差
+  · 沒有 switch，有 match（比對值不是條件；條件判斷還是用 if/elif）
+  · 字串模板用 "%s %d" % [a, b]，不是 backtick
+  · F5 跑主場景、F6 跑當前場景（hello-godot 一個 project 多場景就要分清楚）
+- 踩雷：
+  · range(20) 是 0~19 不是 1~20（FizzBuzz 首尾要 range(1, n+1)）
+  · 累加字串法 FizzBuzz 不用寫 if % 15（多寫會重複串）
+  · 建場景後忘記附加 script 到 Node 上，跑了但 _ready 沒呼叫，Output 空白
+- 下一步：讀 Godot Docs - Getting Started（philosophy / nodes / signals）+ 週末 retro
 
 （每週做完寫 1-3 行：學到什麼、卡哪裡、下週調整）
 ```
