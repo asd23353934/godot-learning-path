@@ -21,7 +21,7 @@
 ## 進度總覽
 
 ```
-M1 (W1-W4)   ░░░░░░░░░░  0%   Godot 基礎 + 2 tutorial
+M1 (W1-W4)   ████░░░░░░  40%  Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ░░░░░░░░░░  0%   DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ░░░░░░░░░░  0%   DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
@@ -74,15 +74,71 @@ Day 2（2026-05-23）即時筆記：
 ### W2：Dodge the Creeps tutorial
 
 - 目標時數：10-15 hr
-- [ ] 跟著 [Your First 2D Game](https://docs.godotengine.org/en/stable/getting_started/first_2d_game/index.html) 做完
+- [~] 跟著 [Your First 2D Game](https://docs.godotengine.org/en/stable/getting_started/first_2d_game/index.html) 做完（Part 1-6 完成，剩 Part 7 音樂+背景色）
 - [ ] 改成自己版本（如 mob 改成卡牌掉下來閃避）
-- [ ] 學到 scene 組合 / signal 連接 / Timer / 隨機 spawn / HUD
+- [x] 學到 scene 組合 / signal 連接 / Timer / 隨機 spawn / HUD
 - [ ] 週末 retro
 
 週記：
 
 ```
+Day 2（2026-05-23）即時筆記（W1 提前完成 → 同日跳 W2）：
 
+完成範圍：
+- 重構專案結構：godot-projects 改為父資料夾（hello-godot / dodge-the-creeps 兩個子專案並存）
+- W2 Part 1：viewport 480x720 + canvas_items + keep（手機直式）
+- W2 Part 2-3：Player 場景（Area2D + AnimatedSprite2D + CollisionShape2D），方向鍵移動 + 動畫切換 + 邊界 clamp
+- W2 Part 4：Mob 場景（RigidBody2D + VisibleOnScreenNotifier2D），隨機 3 種敵人動畫 + 出畫面自動 free
+- W2 Part 5：Main 主場景組合（3 個 Timer + Path2D + PathFollow2D + Marker2D），signal 連線網跑通
+- W2 Part 6：HUD（CanvasLayer + Label + Button），分數顯示 / Start 按鈕 / Game Over 訊息
+
+新 Node 觀念：
+- Area2D：「我會偵測別人撞我」（玩家用）
+- RigidBody2D：「給速度就被引擎推著走」（敵人用，gravity_scale = 0 不要掉）
+- AnimatedSprite2D + SpriteFrames（Resource）：node 是顯示器 / SpriteFrames 是動畫資料
+- CollisionShape2D：給 Area2D / RigidBody2D 配 hitbox 形狀（CapsuleShape2D 等）
+- VisibleOnScreenNotifier2D：出畫面 emit screen_exited → queue_free 自清（避免記憶體爆）
+- Path2D + PathFollow2D：定義曲線 + 沿線跑的指標，progress_ratio 0~1 自動算座標
+- Marker2D：純座標標記，runtime 看不見（玩家起始點 / spawn point）
+- Timer：one_shot 一次性 vs 重複；wait_time + autostart + timeout signal
+- CanvasLayer：UI 圖層，不受 camera 影響（≈ CSS position: fixed）
+- Label / Button：基本 UI 元件，anchor 預設快速排版（≈ CSS Flexbox + 響應式）
+- Theme override：局部 styling（≈ inline style；整套主題用 Theme resource）
+
+GDScript 新語法：
+- @export var x: PackedScene → Inspector 可拖檔欄位（≈ Vue props，dependency injection）
+- instantiate() → 從 PackedScene 開模子（≈ new Class()）
+- add_child(node) → 加進場景樹才會被處理（沒加就放在記憶體沒人理）
+- queue_free() → 自殺（≈ React v-if false）
+- await signal → 暫停 function 等 signal（≈ JS await Promise，但只能等 signal）
+- get_tree().create_timer(1.0).timeout → 一次性 delay signal（短 delay 不用建 Timer node）
+- randf() / randf_range() → 隨機數
+- Vector2(x, 0).rotated(angle) → 向量旋轉（mob spawn 方向計算）
+- $Path/To/Node → 取得子節點（≈ get_node()）
+- position.clamp(min, max) → 夾範圍
+- velocity.normalized() * speed → 斜走不超速
+
+設計 pattern：
+- 場景 = 可重用組件（.tscn ≈ Vue .vue）
+- Node 各司其職：Area2D 偵測 / Sprite 顯示 / Collision 形狀分開（組合優於繼承）
+- Signal up + method down（≈ React/Vue events up + props down）
+  · Parent → Child：直接 $Child.method() call（parent 握有 child 引用）
+  · Child → Parent：emit signal 廣播（child 不該知道 parent）
+- @export 注入而非 preload 寫死（設計師可在 Inspector 換）
+- 自訂 signal 完整週期：signal 宣告 → emit() → connect
+
+踩雷：
+- mod vs mob typo（檔名打錯，code 找不到 node）
+- MapSpawnLocation vs MobSpawnLocation typo（運行時 null error）
+- Player root 不該有變形（scene 實例化會被 parent 覆蓋），scale 要設在 AnimatedSprite2D
+- := 型別推斷對 $Node.prop 失效（要明寫 type 或用 = 改 normal 指派）
+- 沒設 input action 方向鍵無效（要在專案設定 → 輸入對應）
+- F5 跑主場景 vs F6 跑當前場景（多場景專案要切清楚）
+- hide() 沒取消註解 standalone 測試看不到 player（建 Main 後恢復）
+- Path2D 沒封閉（要點 5 個點回起點才會圍成矩形）
+- @export var mob_scene 必須拖 mob.tscn 到 Inspector，不然 instantiate null error
+
+下一步：W2 Part 7 音樂 + 背景色 → W2 收尾 retro
 ```
 
 ---
