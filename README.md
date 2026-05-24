@@ -20,6 +20,7 @@
 | 3 | [03-pipeline.md](docs/03-pipeline.md) | 美術 / 互動 / VN pipeline |
 | 4 | [04-coding-standards.md](docs/04-coding-standards.md) | GDScript 規範、Git workflow |
 | 5 | [05-tasks.md](docs/05-tasks.md) | 90+ 細項任務 + 驗收條件 |
+| 6 | [06-interview-prep.md](docs/06-interview-prep.md) | Junior 面試口語版題庫 + 自我介紹 + AI 時代考點 |
 
 進度追蹤在 [PROGRESS.md](PROGRESS.md)（週級 checkbox）。
 
