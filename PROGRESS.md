@@ -21,7 +21,7 @@
 ## 進度總覽
 
 ```
-M1 (W1-W4)   █████░░░░░  50%  Godot 基礎 + 2 tutorial
+M1 (W1-W4)   ███████░░░  75%  Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ░░░░░░░░░░  0%   DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ░░░░░░░░░░  0%   DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
@@ -158,16 +158,63 @@ GitHub repo：asd23353934/dodge-the-creeps（已 push）
 ### W3：Custom Resource (.tres) + Autoload
 
 - 目標時數：10-15 hr
-- [ ] 看 Resources 文件
-- [ ] 寫 `CardData.gd`（extends Resource）+ 建 3 張測試卡 .tres
-- [ ] 寫 `GameState.gd` autoload（player_hp / energy）
-- [ ] 寫 `EventBus.gd` autoload（5-10 個 signal）
+- [~] 看 Resources 文件（邊做邊查，沒系統性讀完）
+- [x] 寫 `CardData.gd`（extends Resource）+ 建 3 張測試卡 .tres
+- [x] 寫 `GameState.gd` autoload（player_hp / energy + run state + take_damage / heal / spend_energy methods）
+- [x] 寫 `EventBus.gd` autoload（11 個 signal：戰鬥 / 玩家狀態 / 遊戲流程）
 - [ ] 週末 retro
 
 週記：
 
 ```
+Day 2（同 2026-05-23，下午接 W3，新專案 card-resource-demo）：
 
+完成範圍：
+- 建專案 card-resource-demo（純資料 + 邏輯地基，無遊戲畫面）
+- cards/ 資料夾：card_data.gd（extends Resource）+ strike/defend/focus.tres
+- autoload/ 資料夾：game_state.gd（狀態 + 操作 API）+ event_bus.gd（11 個 signal）
+- main.gd 驗證：讀 .tres + 訂閱 EventBus + 操作 GameState 觸發連鎖反應
+
+Custom Resource 觀念：
+- class_name X extends Resource → 可序列化的資料 class
+- @export 欄位 → Inspector 直接編輯
+- @export_multiline → 多行文字框（描述用）
+- .tres 是文字格式可版控、可在 Inspector 編
+- 對應前端：JSON 設定檔 + schema + 內建 GUI 編輯器
+- 拖到 @export var x: Array[CardData] 欄位 → main scene 持有資料
+
+Autoload（singleton）觀念：
+- 註冊在 專案 → 設定 → Autoload → 給 node 名稱（如 GameState）
+- 啟動時自動 instance 到場景樹最頂 / 全 scene 都能用 / 永遠存在
+- 任何地方寫 GameState.xxx 直接訪問，不用 import / get_node
+- 對應前端：Vue Pinia / Angular root service / React Zustand
+- autoload _ready 比所有 scene 早跑
+
+EventBus pattern：
+- 一個專門裝 signal 的 autoload，emit / connect 都在這
+- A 不用認識 B / B 不用認識 A，靠 EventBus 中轉
+- N 個訂閱者一起接（emit 一次全跑）
+- 解耦遠距 scene 間通訊（如戰鬥 → UI / 音效 / 成就系統）
+- 對應前端：Redux dispatch / RxJS Subject / EventEmitter
+
+設計原則（autoload 不要濫用）：
+- 適合：全域狀態（hp/gold/save）、跨場景資源（音樂）、事件中心
+- 不適合：單一 scene 內部狀態、相鄰 node 通訊（用 signal）
+- 過度用 autoload → 全 scene 都依賴它 → 難測試 / 難重構
+
+GameState 也 emit signal（重要 pattern）：
+- take_damage 改完 player_hp 後 → 自動 emit EventBus.damage_dealt + player_hp_changed
+- GameState 只管「改狀態 + 廣播」，完全不管誰會反應
+- UI 訂閱 player_hp_changed 自動更新血條，戰鬥邏輯訂閱 damage_dealt 播飄字
+- 這是 DFS 戰鬥系統的核心模式
+
+踩雷：
+- Resource 必須 extends Resource（不是 RefCounted 也不是 Node）
+- autoload 必須是 Node 或子類（不是 Resource）
+- @export var x = "default" 預設值在 .tres 第一次建立才用
+- Array[CardData] 拖檔到 Inspector，每個元素獨立拖入
+
+下一步：W4 Deckbuilder tutorial（把所有 W1-W3 知識整合做卡牌戰鬥 prototype）
 ```
 
 ---
