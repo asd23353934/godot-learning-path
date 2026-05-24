@@ -21,7 +21,7 @@
 ## 進度總覽
 
 ```
-M1 (W1-W4)   ████░░░░░░  40%  Godot 基礎 + 2 tutorial
+M1 (W1-W4)   █████░░░░░  50%  Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ░░░░░░░░░░  0%   DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ░░░░░░░░░░  0%   DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
@@ -74,8 +74,8 @@ Day 2（2026-05-23）即時筆記：
 ### W2：Dodge the Creeps tutorial
 
 - 目標時數：10-15 hr
-- [~] 跟著 [Your First 2D Game](https://docs.godotengine.org/en/stable/getting_started/first_2d_game/index.html) 做完（Part 1-6 完成，剩 Part 7 音樂+背景色）
-- [ ] 改成自己版本（如 mob 改成卡牌掉下來閃避）
+- [x] 跟著 [Your First 2D Game](https://docs.godotengine.org/en/stable/getting_started/first_2d_game/index.html) 做完（Part 1-7 全部完成）
+- [ ] 改成自己版本（如 mob 改成卡牌掉下來閃避）← 選配
 - [x] 學到 scene 組合 / signal 連接 / Timer / 隨機 spawn / HUD
 - [ ] 週末 retro
 
@@ -138,7 +138,19 @@ GDScript 新語法：
 - Path2D 沒封閉（要點 5 個點回起點才會圍成矩形）
 - @export var mob_scene 必須拖 mob.tscn 到 Inspector，不然 instantiate null error
 
-下一步：W2 Part 7 音樂 + 背景色 → W2 收尾 retro
+Part 7 補完（同日下午）：
+- 加 ColorRect 當背景（暗色，撐滿錨點 → 整個矩形）
+- 加 AudioStreamPlayer Music（House In a Forest Loop.ogg，匯入時勾 Loop 重新匯入）
+- 加 AudioStreamPlayer DeathSound（gameover.wav）
+- main.gd 在 new_game 加 $Music.play()，game_over 加 $Music.stop() + $DeathSound.play()
+- 鍵盤啟動：hud.gd 加 _unhandled_input → 按 ui_accept (Enter/Space) emit start_game
+- 學到：Godot 內建 ui_* action（ui_accept/cancel/select/left/right/up/down/text_submit）
+  不要重綁，自訂操作另開名字（如 move_left）
+
+W2 完整里程碑：能跑、能玩、有音樂、有 UI、可重複開始
+GitHub repo：asd23353934/dodge-the-creeps（已 push）
+
+下一步：W3 Custom Resource (.tres) + Autoload
 ```
 
 ---
