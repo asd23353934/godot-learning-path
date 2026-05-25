@@ -21,7 +21,7 @@
 ## 進度總覽
 
 ```
-M1 (W1-W4)   ███████░░░  75%  Godot 基礎 + 2 tutorial
+M1 (W1-W4)   ████████░░  80%  Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ░░░░░░░░░░  0%   DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ░░░░░░░░░░  0%   DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
@@ -236,14 +236,40 @@ W3.5 補強（2026-05-26）：
 ### W4：第 2 個 tutorial + 卡牌 prototype
 
 - 目標時數：10-15 hr
-- [ ] 跟一個 YouTube「Godot 4 Deckbuilder Tutorial」
-- [ ] 試做：手牌顯示 + 拖卡到敵人 + 扣 HP
+- [s] 跟一個 YouTube「Godot 4 Deckbuilder Tutorial」← 跳過，從 W1-W3 pattern 直接整合
+- [~] 試做：手牌顯示 + 拖卡到敵人 + 扣 HP（進行中）
 - [ ] 月底 retro：M1 哪裡超時 / 哪裡輕鬆
 
 週記：
 
 ```
+Day 5（2026-05-26）W4 開工 — deckbuilder-prototype：
 
+決策：不照 YouTube tutorial，直接從 W1-W3 累積 pattern 整合
+- 理由 1：W1-W3 已建立 CardData (Resource) + GameState (autoload) + EventBus
+- 理由 2：跟 tutorial 容易抄成「會用 framework 但不懂為什麼」
+- 理由 3：W4 主要新東西是 UI 排版 + drag-and-drop，這個比較好查 Godot 官方文件
+
+完成範圍（Day 5）：
+- 建專案 deckbuilder-prototype，PowerShell 複製 W3 的 autoload/cards/test 全套
+- 加 2 張新卡（HEAVY cost 2/dmg 10 + QUICK cost 0/dmg 3），共 5 張覆蓋設計光譜
+- 註冊 autoload，踩到 autoload 順序 bug，已寫進 hsin-dev-notes/godot/errors.md
+- README 含 WIP 進度表，提交 GitHub
+- 寫 Card.tscn 視覺場景（PanelContainer + MarginContainer + VBox + Labels）
+
+踩雷紀錄：
+- autoload 順序錯：GameState 先、EventBus 後 → 30+ Parse Error
+  · Godot 4 parser 嚴格，autoload 之間 forward reference 不行
+  · 規則：被依賴的（EventBus）擺前面、依賴的（GameState）擺後面
+  · 寫進 errors.md 給未來查
+
+下一步（下個 session）：
+- card.gd 寫 setup_with_data(data: CardData) method
+- Hand.tscn 容器 + 動態 instantiate Card × 5
+- Enemy.tscn + ProgressBar HP bar
+- Drag-and-drop 三大 method：_get_drag_data / _can_drop_data / _drop_data
+- Main scene 組合
+- 補 Enemy.take_damage 測試（複用 W3.5 test_runner pattern）
 ```
 
 **M1 完成驗收**：能獨立寫出簡單 2D 遊戲。
