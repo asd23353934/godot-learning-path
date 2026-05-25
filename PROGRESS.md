@@ -214,6 +214,20 @@ GameState 也 emit signal（重要 pattern）：
 - @export var x = "default" 預設值在 .tres 第一次建立才用
 - Array[CardData] 拖檔到 Inspector，每個元素獨立拖入
 
+W3.5 補強（2026-05-26）：
+- 自寫 test_runner：card-resource-demo 加 test/ 資料夾，9 個單元測試
+- 起因：原本想用 GdUnit4 framework，發現 AssetLib 最新 v6.0.0 跟 Godot 4.6.3 API drift
+  · FileAccess.get_as_text() 4.6 改為 0 參數（舊版可傳 bool）
+  · plugin parse error → 連鎖 10 個 compile fail → 整 project 跑不起來
+- Pivot：純 GDScript test harness（無 framework dependency）
+  · 9 個測試覆蓋 take_damage / heal / spend_energy / reset_for_new_run
+  · 含 signal emit 驗證（damage_dealt / player_died）
+  · regression test 防 848f6cf 的 dup-body bug 復發
+  · `_setup()` reset state + clear log，每個 test 隔離
+- 副產出：event_bus.gd 加 @warning_ignore_start("unused_signal")（EventBus pattern 標準誤判）
+- 學習：plugin 不能信「Godot 4」標籤，要看 minor 版本；AssetLib 常滯後 GitHub
+- 面試 prep：interview-prep.md 加 Q16 talking point
+
 下一步：W4 Deckbuilder tutorial（把所有 W1-W3 知識整合做卡牌戰鬥 prototype）
 ```
 

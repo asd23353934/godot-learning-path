@@ -432,6 +432,41 @@ func reset_for_new_run() -> void:
 
 ---
 
+### Q16【新加 2026-05-26】：你的 card-resource-demo 有測試嗎？怎麼設計的？
+
+**Source**：`card-resource-demo/test/test_runner.gd`
+
+**核心觀念**：我原本打算用 GdUnit4 framework，但發現 AssetLib 版本（v6.0.0）跟我的 Godot 4.6.3 API drift（`FileAccess.get_as_text()`），plugin 無法載入。我沒有降 Godot 或苦等 plugin 更新，而是**自寫純 GDScript test harness**，9 個測試全綠。
+
+**口語答**：
+> 「有，9 個單元測試 cover GameState 的 take_damage / heal / spend_energy / reset，包含邊界 case。
+>
+> 過程其實有點曲折。我本來想用 GdUnit4，AssetLib 裝起來但 plugin 載入失敗。debug 出來才知道是 `FileAccess.get_as_text()` 的 API 在 Godot 4.6 改了，GdUnit4 v6.0 還是用舊版 API 寫的，AssetLib 沒同步到最新版。
+>
+> 我沒有降 Godot 也沒等 plugin 更新，**直接自己寫 test harness**。純 GDScript，不依賴任何 framework，跨版本免疫。
+>
+> 包括一個 regression test，**專門 cover 我自己 audit 抓到的 dup-body bug**（commit 848f6cf），確保未來改 reset_for_new_run 不會回到那個壞掉的狀態。」
+
+**加分點**：
+- 展示**問題排查能力**（從 compile error 反推到 API drift）
+- 展示**判斷力**（不被 framework 綁架，知道何時 pivot）
+- 展示**完整工程素養**（regression test 防 bug 復發）
+- 展示**從零造 test runner 的能力**（不只是「會用 framework」）
+
+**常見追問 + 答**：
+
+> 面試官：「為什麼不等 GdUnit4 更新？」
+>
+> 「兩個原因：第一，我不確定 AssetLib 何時會同步，可能幾週也可能幾個月，**學習進度等不起**。第二，自寫 harness 讓我**理解 test runner 怎麼運作**，比學 framework API 學到的東西更深。framework 終究會換或升級，但這個寫法 paradigm 永遠用得到。」
+
+> 面試官：「自寫 harness 有什麼缺點？」
+>
+> 「沒有 mocking、parameterized tests、scene runner 這些進階 feature。如果之後測試規模大到要這些，我會評估換回 framework，或補強 harness。**目前 9 個測試自寫管理得來，超過 30 個再說。**」
+
+**這題的核心訊息：能跟 AI / 工具協作，但不被工具綁架，能在工具失效時自己 build。**
+
+---
+
 ## 2. AI 時代額外考點
 
 ### Q：「你平常會用什麼 AI 工具寫 code？怎麼用？」
@@ -541,13 +576,23 @@ W4 deckbuilder 做完後，重複這份文件的格式，audit 一次新 code。
 
 ## 7. 進度對照
 
-寫這份文件時的 audit 結果：
+### 2026-05-23 初次 audit（W3 結束）
 
 | 等級 | 數量 | 題號 |
 |---|---|---|
 | ✓ 能講清 | 2 | 5、15 |
 | ❓ 大概懂 | 9 | 1, 2, 6, 8, 9, 10, 12, 14 |
 | ❌ 完全沒 | 4 | 3, 4, 7, 11, 13 |
+
+### 2026-05-26 更新（W3 + 測試 retrofit 後）
+
+| 等級 | 數量 | 題號 | 變動 |
+|---|---|---|---|
+| ✓ 能講清 | 3 | 5、15、**16（新）** | +1（新題） |
+| ❓ 大概懂 | 9 | 1, 2, 6, 8, 9, 10, 12, 14 | 不變 |
+| ❌ 完全沒 | 4 | 3, 4, 7, 11, 13 | 還沒練 |
+
+> Q15 雖然 baseline 標 ❓，但 user 後續實際 commit 修了 bug（848f6cf），實作上是 ✓ 等級。
 
 **下次 audit 目標**（W4 後）：
 
@@ -556,6 +601,14 @@ W4 deckbuilder 做完後，重複這份文件的格式，audit 一次新 code。
 | ✓ | ≥ 10 |
 | ❓ | ≤ 4 |
 | ❌ | ≤ 1 |
+
+### 待補強清單（依優先順序）
+
+1. **Q3 delta** — 必背，每次寫 movement 都重複，自然會熟
+2. **Q4 set_deferred** — 物理 callback 常見題，背熟
+3. **Q11 signal up vs direct call** — 解耦核心思想，每次寫 scene 都複習
+4. **Q13 autoload extends Node** — 比較底層，記理由就好
+5. **Q7 mob 方向 +PI/2** — 三角函數，畫圖記得
 
 ---
 
