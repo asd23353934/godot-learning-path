@@ -21,7 +21,7 @@
 ## 進度總覽
 
 ```
-M1 (W1-W4)   ████████░░  80%  Godot 基礎 + 2 tutorial
+M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ░░░░░░░░░░  0%   DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ░░░░░░░░░░  0%   DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
@@ -237,7 +237,7 @@ W3.5 補強（2026-05-26）：
 
 - 目標時數：10-15 hr
 - [s] 跟一個 YouTube「Godot 4 Deckbuilder Tutorial」← 跳過，從 W1-W3 pattern 直接整合
-- [~] 試做：手牌顯示 + 拖卡到敵人 + 扣 HP（進行中）
+- [x] 試做：手牌顯示 + 拖卡到敵人 + 扣 HP（**完成**）
 - [ ] 月底 retro：M1 哪裡超時 / 哪裡輕鬆
 
 週記：
@@ -270,6 +270,53 @@ Day 5（2026-05-26）W4 開工 — deckbuilder-prototype：
 - Drag-and-drop 三大 method：_get_drag_data / _can_drop_data / _drop_data
 - Main scene 組合
 - 補 Enemy.take_damage 測試（複用 W3.5 test_runner pattern）
+
+Day 6（2026-05-27）W4 全部完成：
+
+完成範圍：
+- Card.tscn / hand.tscn / enemy.tscn / main.tscn 全部寫完跑通
+- Drag-and-drop 完整 work：拖卡到敵人 → 扣能量 + 扣 HP + 卡 queue_free
+- 能量不足無法拖（_get_drag_data 早期 return null）
+- 史萊姆 HP 歸零 → main.gd 顯示 VICTORY
+- Enemy 加 4 個測試（take_damage 邊界 + signal + dead ignores）
+- 共 13/13 tests 全綠（GameState 9 + Enemy 4）
+
+W4 新觀念（補進 interview-prep 對應 Q）：
+- PanelContainer / MarginContainer / VBoxContainer / HBoxContainer 排版 hierarchy
+- ProgressBar 視覺化數值
+- unique_name_in_owner + %NodeName 全域引用語法
+- @export var x: Type 的 setter 模式（Inspector 改值即時反映）
+- PackedScene 動態 instantiate × N 個（Hand 內部）
+- Godot 內建 drag-and-drop 三大 method
+  · _get_drag_data：開始拖時 call，return null 取消 / 設 drag preview
+  · _can_drop_data：拖到上面 call，bool 決定能不能放
+  · _drop_data：放開 call，真正處理
+- drag preview 用 PackedScene.instantiate 而非 duplicate（owner / unique_name 衝突）
+- class_name X 讓 type check 簡潔（data is Card）
+
+設計討論（要寫進 interview-prep）：
+- 拖拉 vs 點選+目標：兩派都業界主流，DFS 用拖拉因為 Slay the Spire 是
+- 業界測試現況：遊戲業 coverage 一般低於後端，junior 寫測試是「異常加分」
+- 自寫 test runner vs framework：pattern 一樣，產品階段才換 framework
+
+踩雷紀錄（無，這次很順）：
+- 主要修一個 Edit 失敗（event_bus.gd 沒先 Read），無影響
+
+M1 完成（W1-W4 全部 ✅）：
+- W1：Godot 安裝 + GDScript 100 行
+- W2：dodge-the-creeps 完整可玩
+- W3：Custom Resource + Autoload + 9 個測試
+- W3.5：test harness pivot（GdUnit4 v6.0 incompat）
+- W4：Deckbuilder prototype + 13 個測試
+
+GitHub repos（5 個全部 push）：
+- godot-learning-path
+- dodge-the-creeps
+- card-resource-demo
+- deckbuilder-prototype（新加 5 個檔 + README + screenshot）
+- hsin-dev-notes
+
+下一站：W5 進 M2 DFS Phase 0 setup（建主專案 dice-fate-survivor 結構）
 ```
 
 **M1 完成驗收**：能獨立寫出簡單 2D 遊戲。

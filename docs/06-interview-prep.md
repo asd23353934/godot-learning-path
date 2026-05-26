@@ -467,6 +467,59 @@ func reset_for_new_run() -> void:
 
 ---
 
+### Q17【新加 2026-05-27】：Godot 拖拉打卡怎麼實作？
+
+**Source**：`deckbuilder-prototype/card.gd` + `enemy.gd`
+
+**核心觀念**：Godot Control 系內建 3 個 virtual method 處理 drag-and-drop，**不需要 plugin**。
+
+**口語答**：
+> 「Godot Control 系（PanelContainer / Control / Label 等）內建三個 virtual method：
+>
+> 第一個 `_get_drag_data(pos)`，被拖的 Card 實作。開始拖時 Godot 自動 call，**回傳什麼 data 就被當作 drag payload**，回 null 取消拖。我在這邊做能量檢查 + 設 drag preview。
+>
+> 第二個 `_can_drop_data(pos, data)`，被拖到的 Enemy 實作。判斷 data 是不是 Card → 決定是否高亮、是否能放。
+>
+> 第三個 `_drop_data(pos, data)`，放開滑鼠時 call。我在這扣能量 + 套用傷害 + `card.queue_free()` 移除手牌。
+>
+> 整套 **30 行 code**，無 plugin 依賴。」
+
+**加分點 — 三個值得展開的點**：
+
+**1. drag preview 不用 `duplicate()` 用 `PackedScene.instantiate()`**
+
+> 「duplicate() 會 copy 整個 node tree，但 `unique_name_in_owner` 屬性（`%NameLabel`）依賴 scene owner 關係。preview 沒有正確 owner → `%` 找不到 node → script `_ready` 出錯。
+>
+> 改用 `preload('res://card.tscn').instantiate()` 生 fresh card，owner 自動對。」
+
+**2. 能量檢查在兩個地方**
+
+> 「我在 `_get_drag_data` 已經檢查能量，但 `_drop_data` 還是再呼叫 `GameState.spend_energy()`。**雙保險**：
+> - `_get_drag_data` 早 return 是 UX 層（玩家拖不起來）
+> - `spend_energy` 是 source of truth（真的扣能量）
+>
+> 萬一未來增加效果讓能量在拖一半變動，第二層才不會破。」
+
+**3. 為什麼 `_get_drag_data` 回 self 而不是 data**
+
+> 「我 return Card node 自己，不是 `CardData`。原因：Enemy 拿到後要 `card.queue_free()` 把卡從 Hand 移除。如果只 return CardData，找不回 Card node。
+>
+> data 還在 — Enemy 透過 `card.data` 拿到。」
+
+**常見追問**：
+
+> 面試官：「拖拉跟點選+目標兩種輸入哪個好？」
+>
+> 「看遊戲類型。Slay the Spire 拖拉，Hearthstone 點選+目標。**桌機 indie 拖拉直覺，手機 / 觸控點選好**。我這 prototype 拖拉是因為**參考作 Slay the Spire 是拖拉**，玩家 muscle memory 對齊。實際上 modern 趨勢是混合（Legends of Runeterra），桌機拖、手機點。」
+
+> 面試官：「多目標卡牌怎麼處理拖拉？」
+>
+> 「我 prototype 只一隻敵人沒這問題。**多目標的話拖拉變麻煩**：拖到「所有敵人」這種卡視覺不直覺。我會改用**選卡 → 出現多目標 checkbox → 確認** 這種 UI。或者 AOE 卡單獨用 click-target 機制處理，普通卡保持拖拉。」
+
+**這題的核心訊息：理解 Godot 內建 API 的設計意圖，能解釋每個小決策（preview / 雙保險 / return type）。**
+
+---
+
 ## 2. AI 時代額外考點
 
 ### Q：「你平常會用什麼 AI 工具寫 code？怎麼用？」
@@ -593,6 +646,16 @@ W4 deckbuilder 做完後，重複這份文件的格式，audit 一次新 code。
 | ❌ 完全沒 | 4 | 3, 4, 7, 11, 13 | 還沒練 |
 
 > Q15 雖然 baseline 標 ❓，但 user 後續實際 commit 修了 bug（848f6cf），實作上是 ✓ 等級。
+
+### 2026-05-27 更新（W4 deckbuilder 完成後）
+
+| 等級 | 數量 | 題號 | 變動 |
+|---|---|---|---|
+| ✓ 能講清 | 4 | 5、15、16、**17（W4 新）** | +1（drag-drop 剛實作完，記憶新鮮） |
+| ❓ 大概懂 | 9 | 1, 2, 6, 8, 9, 10, 12, 14 | 不變 |
+| ❌ 完全沒 | 4 | 3, 4, 7, 11, 13 | 還沒練 |
+
+> Q17 因為剛實作完 drag-and-drop（card.gd + enemy.gd），每個設計選擇都記得，是面試金題。
 
 **下次 audit 目標**（W4 後）：
 
