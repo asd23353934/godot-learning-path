@@ -22,7 +22,7 @@
 
 ```
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
-M2 (W5-W8)   ░░░░░░░░░░  0%   DFS Phase 0-2（戰鬥 prototype）
+M2 (W5-W8)   ██░░░░░░░░  25%  DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ░░░░░░░░░░  0%   DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
@@ -328,14 +328,45 @@ GitHub repos（5 個全部 push）：
 ### W5：Phase 0 setup
 
 - 目標時數：10-15 hr
-- [ ] 建 DFS 專案結構（5-6 個 autoload）
-- [ ] 設 Godot project settings（render / display / input）
-- [ ] Git repo + commit pattern 開始
+- [x] 建 DFS 專案結構（5 個 autoload + scripts/scenes/data/assets/tests 資料夾骨架）
+- [x] 設 Godot project settings（1280x720 / canvas_items / keep / debug warnings）
+- [x] Git repo + commit pattern 開始（DFS repo 已 push 過 docs，現在加 Godot project）
 
 週記：
 
 ```
+Day 7（2026-05-28）M2 開工 — DFS Phase 0：
 
+完成範圍：
+- 把 dice-fate-survivor 從 Desktop 搬到 Desktop/godot-projects/（5 個 project 並列管理）
+- 在 DFS repo 內建 Godot project（注意 docs/ + SPEC.md 已存在，不勾「版本控制中繼資料」避免覆蓋）
+- 建 5 個 autoload（按 DFS architecture.md 順序註冊）：
+  · SettingsManager（stub，W17 補完）
+  · EventBus（41 signal：玩家狀態 / 戰鬥 / 棋盤 / Hub / 流程 五層）
+  · GameState（permanent + current_run 拆分，take_damage / heal / spend_energy / spend_gold
+    / reset_for_new_run / reset_energy_for_new_wave / purchase upgrade / unlock_card）
+  · AudioManager（stub，W21 補完）
+  · SceneRouter（stub，W17 補完）
+- 設 project.godot：1280x720 / canvas_items / keep / exclude_addons warning / Forward+
+- 建資料夾骨架：scripts/ data/ scenes/ assets/ tests/（用 .gitkeep 讓 git 追蹤空資料夾）
+- 寫 scripts/main.gd + main.tscn bootstrap 場景：F5 印 5 autoload ready 訊息
+- F5 跑通：41 signals / HP 80/80 / 全 stub OK
+
+W5 比 W3 W4 多學到：
+- 大 project 的 autoload 依賴順序（11 個 spec / 先做 5 個）
+- 在「已有 docs 的 repo」內建 Godot project 的技巧（不勾版本控制中繼資料）
+- .gitkeep 維持空資料夾結構於 git
+- Permanent vs Current Run state 拆分（DFS 跨 run 升級系統的關鍵設計）
+- EventBus 多層 signal（41 個）統一管理 vs 散落各 scene
+
+新觀念對應 interview-prep（W5 talking point）：
+- Q18：DFS 11 autoload 怎麼設計？順序為何？依賴關係？
+- Q19：Permanent vs Current Run state 分開好處？
+
+下一步（W6 起）：
+- W6 Phase 1：walking skeleton（主選單 → 棋盤 → 戰鬥 → 結算 → 主選單 全空殼）
+- 用 SceneRouter 串場景切換
+- 用 EventBus 串跨場景狀態傳遞
 ```
 
 ---
