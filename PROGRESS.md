@@ -22,7 +22,7 @@
 
 ```
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
-M2 (W5-W8)   █████░░░░░  50%  DFS Phase 0-2（戰鬥 prototype）
+M2 (W5-W8)   ████████░░  75%  DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ░░░░░░░░░░  0%   DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
@@ -417,14 +417,46 @@ W6 新概念：
 ### W7：Phase 2 戰鬥 prototype (上)
 
 - 目標時數：10-15 hr
-- [ ] 戰鬥場景：玩家 + 1 敵人
-- [ ] 手牌 UI（hardcode 5 張卡）
-- [ ] 拖卡釋放 → 扣敵人 HP
+- [x] 戰鬥場景：玩家 + 1 敵人（史萊姆 HP 15 demo）
+- [x] 手牌 UI（hardcode 5 張卡 — STRIKE/DEFEND/FOCUS/HEAVY/QUICK）
+- [x] 拖卡釋放 → 扣敵人 HP（移植 W4 drag-drop）
 
 週記：
 
 ```
+Day 7（2026-05-28）M2 加速 — W7 Phase 2 上半：
 
+完成範圍（同一個 session 內 W5+W6+W7）：
+- 把 W4 deckbuilder-prototype 完整移植進 DFS
+- CardData class 移到 scripts/data/card_data.gd
+- 5 張 .tres 移到 data/cards/（用 script_class="CardData" 鏈結）
+- Card / Hand / Enemy script 移到 scripts/combat/
+- Card / Hand / Enemy scene 移到 scenes/combat/
+- combat.tscn 從 placeholder 升級成真戰鬥（背景 + 能量 label + 1 隻 enemy + 5 張手牌）
+- combat.gd orchestrate：進場 reset 能量 + 訂閱 enemy.died + 勝利 1.5 秒切回 board
+- enemy.gd 加 EventBus.damage_dealt.emit（W4 沒有，DFS 需要 global 訂閱）
+
+W7 新觀念：
+- code 移植 / 重組的工程實踐（不重寫，調 path + 加 EventBus）
+- local + global signal 並存 pattern（hp_changed local + damage_dealt global）
+- .tres 用 script_class 鏈結 .gd（跨 repo 也能 work）
+- combat scene 用 instance=ExtResource 嵌入 sub-scene（編輯器可見 + immediate 顯示）
+- Inspector Array[CardData] 拖檔配置（不寫 code 就能設 5 張卡）
+
+設計權衡：
+- enemy HP 從 30 降到 15（demo 用），W8 加抽牌後改回
+- DEFEND / FOCUS 在 W7 dmg=0 placeholder，W8/W11 補 shield/buff 機制
+
+下一步（W8 起）：Phase 2 下半
+- 加 end_turn 按鈕 + 敵人回合
+- 加抽牌系統（GameState.deck / hand / discard）
+- DEFEND 真的給 shield、FOCUS 真的加 buff（基礎）
+- 戰鬥失敗處理（玩家 HP=0 → main_menu）
+- 多場戰鬥（5 波結構雛形）
+
+implementation guide 補完：docs/07-implementation/W7-phase-2-combat-prototype-upper.md
+（10 段：目標 / 設計決策 / 檔案 / 流程 / code 解析 / Vue 對照 /
+擴充方式 / 常見錯誤 / 下游依賴 / 面試 talking point）
 ```
 
 ---
