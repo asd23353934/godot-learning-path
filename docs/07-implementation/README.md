@@ -17,7 +17,7 @@
 | [W5 / Phase 0](W5-phase-0-autoloads.md) | DFS 5 個 autoload + 資料夾骨架 | [dice-fate-survivor](https://github.com/asd23353934/dice-fate-survivor) |
 | [W6 / Phase 1](W6-phase-1-walking-skeleton.md) | SceneRouter fade + 4 場景 walking skeleton | dice-fate-survivor |
 | [W7 / Phase 2 上](W7-phase-2-combat-prototype-upper.md) | 戰鬥 prototype 上半 — 移植 W4 卡牌 + drag-drop + EventBus 整合 | dice-fate-survivor |
-| W8 / Phase 2 下 | （即將）戰鬥 prototype 下半 — 抽棄牌堆 + 敵人回合 + 5 波結構 | dice-fate-survivor |
+| [W8 / Phase 2 下](W8-phase-2-combat-prototype-lower.md) | 戰鬥 prototype 下半 — 抽棄牌堆 + Shield + End Turn + 敵人攻擊 + 勝負 | dice-fate-survivor |
 
 ## 每篇 guide 的固定結構
 

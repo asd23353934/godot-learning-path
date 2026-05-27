@@ -22,7 +22,7 @@
 
 ```
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
-M2 (W5-W8)   ████████░░  75%  DFS Phase 0-2（戰鬥 prototype）
+M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ░░░░░░░░░░  0%   DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
@@ -464,14 +464,56 @@ implementation guide 補完：docs/07-implementation/W7-phase-2-combat-prototype
 ### W8：Phase 2 戰鬥 prototype (下)
 
 - 目標時數：10-15 hr
-- [ ] 敵人回合（簡單 attack）
-- [ ] 5 波結構基礎
+- [x] 敵人回合（每回合 attack 4，take_damage 吸 shield）
+- [~] 5 波結構基礎（保留 W9 / Phase 3 做，W8 只做單場戰鬥）
 - [ ] 月底 retro
 
 週記：
 
 ```
+Day 7（2026-05-28）M2 完成 — W8 Phase 2 下半：
 
+完成範圍（同 Day 7 內 W5+W6+W7+W8 全做完）：
+- CardData 加 shield 欄位；DEFEND.tres shield=5
+- GameState 大改：deck/hand/discard cycle、shield、抽棄牌堆、take_damage 先扣 shield
+- EventBus 加 3 signal：shield_changed / hand_changed / deck_state_changed
+- Hand 重構為 reactive：訂閱 hand_changed + 從 GameState.hand 讀（single source of truth）
+- Enemy 加 attack_damage + enemy_turn_attack；drop 處理 damage / shield 兩種卡
+- enemy HP 改回 30、attack_damage = 4
+- combat.tscn 加 EndTurnButton / ShieldLabel / PlayerHPLabel / DeckCountLabel / DiscardCountLabel
+- combat.gd turn loop orchestration：
+  · _ready 訂閱 + start_combat_with_deck + draw_card(5)
+  · End Turn：棄手牌 → 敵人攻擊 → 抽 5 + 能量回滿
+  · 玩家死 / 敵人死 → 對應結局 → 1.5 秒切場景
+
+W8 新觀念：
+- Hand reactive pattern（Vue 響應式 / React state 對應）
+- single source of truth：GameState.hand 是唯一真實狀態
+- shield + HP 雙層 take_damage：封裝於 GameState（鬆耦合）
+- deck cycle：抽空自動洗 discard 回去
+- Slay the Spire 規則：每回合棄整手 + 抽 5 新
+- pop_back() vs shift()：stack 模式 O(1) 效率
+
+設計討論（寫進 interview-prep）：
+- Q：DEFEND 拖到敵人 UX 怪不怪？
+  · 怪，W8 範圍可接受（功能 work > UX 完美）
+  · W11 加 card_type enum + click 自觸發，正式 refactor
+- Q：為什麼 Hand 整把 rebuild 不漸進 diff？
+  · 5 張小 → rebuild < 1ms，比 diff 邏輯複雜性簡單
+  · 規模上去再優化
+
+M2 整體完成（W5-W8 全部）：
+- W5：5 autoload + 結構（Phase 0）
+- W6：SceneRouter fade + 4 場景（Phase 1 walking skeleton）
+- W7：戰鬥 prototype 上半（移植 W4 拖卡攻擊）
+- W8：戰鬥 prototype 下半（抽棄牌 + shield + turn loop + 勝負）
+
+下一步 W9 進 M3：Phase 3 戰鬥成熟
+- 加 5 波結構（Step 2.8）
+- Status effect 6 種（poison / weak / vulnerable / strength / dex / shield）
+- Combo Lock 招牌機制
+- 卡牌資料化 .tres 池（hardcode → loader）
+- GdUnit4 / 自寫 harness 補戰鬥公式測試
 ```
 
 ---
