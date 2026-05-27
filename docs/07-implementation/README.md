@@ -18,6 +18,7 @@
 | [W6 / Phase 1](W6-phase-1-walking-skeleton.md) | SceneRouter fade + 4 場景 walking skeleton | dice-fate-survivor |
 | [W7 / Phase 2 上](W7-phase-2-combat-prototype-upper.md) | 戰鬥 prototype 上半 — 移植 W4 卡牌 + drag-drop + EventBus 整合 | dice-fate-survivor |
 | [W8 / Phase 2 下](W8-phase-2-combat-prototype-lower.md) | 戰鬥 prototype 下半 — 抽棄牌堆 + Shield + End Turn + 敵人攻擊 + 勝負 | dice-fate-survivor |
+| [W9 / Phase 3 (1/3)](W9-phase-3-card-database.md) | 卡牌資料化 — CardDatabase autoload + id-based lookup + 10 張卡池 | dice-fate-survivor |
 
 ## 每篇 guide 的固定結構
 

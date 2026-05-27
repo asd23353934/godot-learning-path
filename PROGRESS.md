@@ -23,7 +23,7 @@
 ```
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
-M3 (W9-W13)  ░░░░░░░░░░  0%   DFS Phase 3-4（戰鬥成熟 + 棋盤）
+M3 (W9-W13)  ██░░░░░░░░  20%  DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
 M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
@@ -523,13 +523,40 @@ M2 整體完成（W5-W8 全部）：
 ### W9：Phase 3 戰鬥成熟 (1/3) — 卡牌資料化
 
 - 目標時數：10-15 hr
-- [ ] hardcode 卡改成從 .tres 讀
-- [ ] 卡牌池基本建立
+- [x] hardcode 卡改成從 .tres 讀（CardDatabase scan data/cards/）
+- [x] 卡牌池基本建立（10 張：strike/defend/focus/heavy/quick + bash/cleave/parry/brace/pommel_strike）
 
 週記：
 
 ```
+Day 7 後段（2026-05-28）— W9 Phase 3 (1/3) 卡牌資料化：
 
+完成範圍：
+- CardData 加 id: String 欄位（中央 lookup key）
+- 5 既有 .tres 補 id（strike/defend/focus/heavy/quick）
+- 加 5 張新 .tres：bash/cleave/parry/brace/pommel_strike（覆蓋 cost 0/1/2 光譜）
+- 寫 scripts/autoload/card_database.gd：
+  · _ready 用 DirAccess scan data/cards/ 動態載入
+  · 提供 get_card(id) / get_all_cards / build_starter_deck(kit_id)
+  · kit_starter_decks Dictionary hardcode（KIT_SWORD 1 套）
+- 註冊 CardDatabase 到 project.godot（GameState 後、AudioManager 前）
+- combat.tscn 移除 starter_deck @export array（不用拖 10 張了）
+- combat.gd 改用 CardDatabase.build_starter_deck(GameState.current_kit)
+- F5 跑 CardDatabase 載 10 張 + 戰鬥能玩
+
+W9 新觀念：
+- Repository pattern in Godot（autoload 中央 registry）
+- DirAccess 動態 scan（Webpack require.context / Vite glob 對應）
+- id-based reference（save 友善 + path 重命名 robust）
+- 漸進式抽象（kit hardcode Dictionary → 之後 KitData.tres）
+- 防禦性 fallback（current_kit 空字串 → KIT_SWORD）
+
+設計權衡（寫進 interview-prep / W9 guide）：
+- 為什麼 id 不直接 ref：serialization + rename robustness
+- 為什麼 kit 暫 hardcode 不 .tres 化：YAGNI（1 個 kit 不值得抽象）
+- 為什麼動態 scan 不 hardcode list：加新卡只丟 .tres，code 不動
+
+下一步 W10：Phase 3 (2/3) Status + Power 6 種狀態
 ```
 
 ---
