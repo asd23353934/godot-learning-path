@@ -22,7 +22,7 @@
 
 ```
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
-M2 (W5-W8)   ██░░░░░░░░  25%  DFS Phase 0-2（戰鬥 prototype）
+M2 (W5-W8)   █████░░░░░  50%  DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ░░░░░░░░░░  0%   DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
@@ -374,13 +374,42 @@ W5 比 W3 W4 多學到：
 ### W6：Phase 1 walking skeleton
 
 - 目標時數：10-15 hr
-- [ ] 主選單 → 棋盤 → 戰鬥 → 結算 → 回主選單（全空殼）
-- [ ] 場景切換 + 全局 state 串起來
+- [x] 主選單 → Hub → Board → Combat → 假勝利/失敗 → 回主選單（全 placeholder）
+- [x] 場景切換 + 全局 state 串起來（SceneRouter fade + autoload 跨場景持續）
 
 週記：
 
 ```
+Day 7（2026-05-28）M2 加速 — W6 Phase 1 walking skeleton：
 
+完成範圍：
+- 升級 SceneRouter：從 stub 變真實作
+  · 在 autoload 自己 _ready 時建 CanvasLayer + ColorRect 全螢幕黑屏
+  · CanvasLayer.layer = 100 → 永遠在最上層蓋場景
+  · change_scene(path, duration=0.3)：fade out 0→1 → 切場景 → fade in 1→0
+  · mouse_filter=IGNORE 不擋滑鼠
+- 建主選單 main_menu.tscn：DiceFateSurvivor 標題 + 4 按鈕（開始/設定/圖鑑/離開）
+- 建 3 個 placeholder：scenes/hub/hub.tscn、scenes/board/board.tscn、scenes/combat/combat.tscn
+- 每個 placeholder 都有 navigation button 串起 flow
+- combat 多了「假勝利」「假失敗」按鈕（測試 EventBus.combat_ended / run_ended）
+- project.godot main_scene 從 main.tscn 改成 scenes/main_menu.tscn
+- 刪掉 W5 的 bootstrap main.tscn + scripts/main.gd（被取代）
+
+W6 新概念：
+- CanvasLayer + layer 數字決定渲染層級（autoload 持有的 CanvasLayer 跨場景永存）
+- Tween 用法：create_tween() → tween_property() → await tween.finished
+- await get_tree().process_frame：等下一 frame（讓 _ready 完成）
+- get_tree().change_scene_to_file(path) 切場景 API
+- set_anchors_preset(Control.PRESET_FULL_RECT) 程式設定 anchor
+- 整套 game flow 串接：玩家可以走完整一輪雖無真內容
+
+驗收：F5 跑通完整 flow（主選單 → Hub → Board → Combat → 假勝利 → Board → ... → 回主選單），fade 流暢，autoload 跨場景持續 ready。
+
+下一步（W7 起）：Phase 2 戰鬥 prototype
+- 把 W4 deckbuilder-prototype 的 Card / Hand / Enemy 移植進 DFS combat scene
+- 玩家 + 1 敵人戰鬥
+- 5 張 hardcode 卡 → 拖卡攻擊（重用 W4 drag-drop）
+- 之後 W9-W11 加 .tres 資料化 / status / Combo Lock
 ```
 
 ---
