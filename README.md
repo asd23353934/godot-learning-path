@@ -21,6 +21,7 @@
 | 4 | [04-coding-standards.md](docs/04-coding-standards.md) | GDScript 規範、Git workflow |
 | 5 | [05-tasks.md](docs/05-tasks.md) | 90+ 細項任務 + 驗收條件 |
 | 6 | [06-interview-prep.md](docs/06-interview-prep.md) | Junior 面試口語版題庫 + 自我介紹 + AI 時代考點 |
+| 7 | [07-implementation/](docs/07-implementation/) | 每週實作流程教材（review-ready：設計決策 / code 解析 / 擴充指南） |
 
 進度追蹤在 [PROGRESS.md](PROGRESS.md)（週級 checkbox）。
 
