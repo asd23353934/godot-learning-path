@@ -23,7 +23,7 @@
 ```
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
-M3 (W9-W13)  ████░░░░░░  40%  DFS Phase 3-4（戰鬥成熟 + 棋盤）
+M3 (W9-W13)  ██████░░░░  60%  DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
 M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
@@ -611,13 +611,56 @@ W10 新觀念：
 ### W11：Phase 3 戰鬥成熟 (3/3) — Combo Lock + 測試
 
 - 目標時數：10-15 hr
-- [ ] Combo Lock universal 機制（招牌）
-- [ ] GdUnit4 寫 5-10 個 combat-formulas 測試
+- [x] Combo Lock universal 機制（**招牌** — 1.0/1.2/1.5 multiplier）
+- [x] **自寫 harness** 11 個 combat-formulas 測試（GdUnit4 v6.0 跟 4.6.3 不相容延用 W3.5 決定）
 
 週記：
 
 ```
+Day 7 後段（2026-05-28）— W11 Phase 3 (3/3) Combo Lock 招牌機制：
 
+完成範圍：
+- CardData 加 CardType enum（ATTACK=0 / SKILL=1 / POWER=2 / ITEM=3）
+- CardData 加 get_type_string()（給 GameState 用 String 接 combo type）
+- 4 張 .tres 加 card_type 欄位（defend/parry/brace 設 SKILL，focus 設 POWER）
+  · Attack 7 張保持 default 0
+- GameState 加 Combo Lock state：
+  · current_combo_count / current_combo_type
+  · on_card_played(type_str) — 連續同類 ++，換類重設 1
+  · get_current_combo_multiplier() — 回 1.0 / 1.2 / 1.5（cap）
+  · reset_combo() — 新戰鬥 + End Turn 用
+- EventBus 加 combo_changed(count, type, multiplier) signal
+- enemy._drop_data 整合 combo：
+  · 先 on_card_played 拿 multiplier
+  · damage / shield / status stacks 全部 × multiplier
+  · strength permanent buff 不乘（避免 Power exploit）
+- combat.tscn 加 ComboLabel
+- combat.gd 訂閱 combo_changed + UI handler + End Turn reset
+- tests/test_runner.gd + .tscn 寫 11 個測試：
+  · Combo：1.0 / 1.2 / 1.5 cap / type 切換 / reset_combo (6 個)
+  · Damage 修飾鏈：strength / weak / combined order (3 個)
+  · Shield 吸收：full / overflow (2 個)
+- F5 跑 Combo Lock 視覺驗證 + F6 跑 11/11 全綠
+
+W11 新觀念：
+- Universal 機制設計：全流派通用 + 全 effect 通用，學一次到處用
+- Multiplier 套用範圍精選（瞬間效果套、permanent 不套）
+- Enum + get_type_string 雙形：Inspector 防 typo + log/signal 用 string
+- 順序敏感操作：on_card_played → get_multiplier → 套效果
+- Float 比對用 epsilon（不用 ==），測試標準寫法
+- self-written test harness（W3.5 pattern 擴充到 DFS）
+
+設計權衡（寫進 interview-prep / W11 guide）：
+- 為什麼 1.0/1.2/1.5 不用 1.0/1.5/2.0：戰鬥平衡 vs 玩家感受
+- 為什麼 strength 不乘 combo：Power exploit 防護
+- 為什麼自寫 test harness 不用 GdUnit4：W3.5 API drift 一致決定
+
+W11 mini-gate（DFS spec 寫的「自評戰鬥手感」）：跳過，由 user 自評。
+
+下一步 W12：Phase 4 棋盤 prototype 上
+- 20 格 closed loop 棋盤
+- 5 種格子（gold/item/event/combat/shop）
+- 玩家擲骰移動
 ```
 
 ---

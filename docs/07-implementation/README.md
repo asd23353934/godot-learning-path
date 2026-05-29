@@ -20,6 +20,7 @@
 | [W8 / Phase 2 下](W8-phase-2-combat-prototype-lower.md) | 戰鬥 prototype 下半 — 抽棄牌堆 + Shield + End Turn + 敵人攻擊 + 勝負 | dice-fate-survivor |
 | [W9 / Phase 3 (1/3)](W9-phase-3-card-database.md) | 卡牌資料化 — CardDatabase autoload + id-based lookup + 10 張卡池 | dice-fate-survivor |
 | [W10 / Phase 3 (2/3)](W10-phase-3-status-effects.md) | Status Effect 系統 — poison / weak / vulnerable / strength + 修飾鏈分輸出/受傷端 | dice-fate-survivor |
+| [W11 / Phase 3 (3/3)](W11-phase-3-combo-lock.md) | **Combo Lock 招牌** — 1.0/1.2/1.5 multiplier + CardType enum + 11 個 combat-formulas tests | dice-fate-survivor |
 
 ## 每篇 guide 的固定結構
 
