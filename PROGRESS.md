@@ -23,7 +23,7 @@
 ```
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
-M3 (W9-W13)  ██░░░░░░░░  20%  DFS Phase 3-4（戰鬥成熟 + 棋盤）
+M3 (W9-W13)  ████░░░░░░  40%  DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
 M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
@@ -564,13 +564,46 @@ W9 新觀念：
 ### W10：Phase 3 戰鬥成熟 (2/3) — Status + Power
 
 - 目標時數：10-15 hr
-- [ ] 6 種 status（poison / weak / vulnerable / strength / dex / shield）
-- [ ] Power 卡實作
+- [~] 6 種 status：W10 做 4 種（poison / weak / vulnerable / strength），dex / shield 留 W11（shield 已是獨立變數）
+- [x] Power 卡實作（FOCUS 從 placeholder → grants_strength_to_self=3）
 
 週記：
 
 ```
+Day 7 後段（2026-05-28）— W10 Phase 3 (2/3) Status Effect：
 
+完成範圍：
+- CardData 加 4 個 status @export 欄位（applies_X_to_enemy + grants_strength_to_self）
+- FOCUS 從 W8 placeholder 補完：grants_strength_to_self=3
+- BASH 補完：applies_weak_to_enemy=2
+- 新加 POISON_DART：dmg=2 + applies_poison=3（pool 11 張）
+- KIT_SWORD kit 重組：3 strike / 2 defend / 1 bash / 1 heavy / 1 focus / 1 poison_dart / 1 quick = 10
+- GameState 加 player_statuses Dictionary
+  · apply_player_status / tick_player_statuses / compute_outgoing_damage（含 strength + / weak -）
+- Enemy 加 statuses Dictionary
+  · apply_status / tick_statuses
+  · receive_attack（vulnerable 修飾 +50%）
+  · enemy_turn_attack 含 weak 修飾（-25%）
+- enemy._drop_data 補：套 status_to_enemy + GameState.apply_player_status
+- combat.gd End Turn 重排：棄手牌 → 敵 tick → 敵攻擊 → 玩家 tick → 抽牌
+- combat.gd 加 status UI 處理 + _format_statuses helper + _status_label 翻譯
+- combat.tscn 加 PlayerStatusLabel + EnemyStatusLabel
+- EventBus 加 player_status_changed + enemy_status_changed
+
+W10 新觀念：
+- Status Effect 三種時間語意：stacking + decay / duration / permanent
+- 修飾鏈拆分：strength + weak 在攻擊輸出端、vulnerable 在受傷端
+  · 鬆耦合：各自 own 自己的狀態邏輯
+- compute_outgoing_damage 順序：先 + strength 再 × weak（Slay the Spire 標準）
+- Dictionary{status_id: stacks} 不用 enum + Resource（W10 只 4 種 trade-off）
+- 漸進式抽象：W11+ 增至 10+ 種才 StatusData.tres 化
+- tick 順序：每步 if hp > 0 防 dirty state
+
+下一步 W11：Phase 3 (3/3)
+- Combo Lock 招牌機制（招牌！）
+- card_type enum 重構（ATTACK / SKILL / POWER）+ click 自觸發
+- GdUnit4 / 自寫 harness 寫 5-10 個 combat-formulas 測試
+- W11 mini-gate：戰鬥手感如何？
 ```
 
 ---
