@@ -486,3 +486,116 @@ W15 暫不處理（DFS 目前無 poison_to_self 卡，不會踩到）。
 
 **M4 (W14-W17) 進度：50% (2/4)**
 **下一週 W16**：Hub 場景 + 2 NPCs + Dialogic plugin VN 對話
+
+---
+
+## 附錄 A：W15.5 同日補丁 — 升級卡 reward 類型 + Panel z-index fix
+
+### 1. UI bug：StageClearPanel / RunEndPanel 透出底層場景
+
+**症狀**：panel 顯示時，下面的棋盤 tile（戰鬥 / 商店 / 空地）還是看得到，文字跟 tile 圖案重疊。
+
+**原因**：
+- Godot Panel 預設 StyleBoxFlat 有透明度（且即使 100% 也只蓋 panel 自己範圍）
+- panel offset 是 340/130 to 940/590，剩餘區域完全沒蓋
+- 沒設 z_index → 跟 board 子節點同層
+
+**修法**：
+1. Panel → Control（root 改容器類型，當 overlay 用）
+2. z_index = 100（壓在所有 board 元素之上）
+3. 加 child `PanelDim`（ColorRect 全螢幕 + Color(0,0,0,0.78)）做 dim 效果
+4. 加 child `InnerPanel`（原 Panel offset，當內框）
+5. VBox 改 parent 到 `InnerPanel/VBox`
+
+```
+StageClearPanel (Control, z_index 100, full screen)
+├── PanelDim (ColorRect, dim 78%)
+└── InnerPanel (Panel, 600×460 centered)
+    └── VBox
+        ├── TitleLabel
+        ├── StatsLabel
+        └── StageClearMenuButton
+```
+
+RunEndPanel 同樣 pattern fix。
+
+### 2. 升級卡 reward 類型
+
+**目標**：reward 不只「加新卡」，可以「升級現有卡」（Slay the Spire fire upgrade pattern）。
+
+#### 2.1 CardData 加 `upgraded_version: CardData`
+
+```gdscript
+# scripts/data/card_data.gd
+@export var upgraded_version: CardData = null  # null = 不可升級 / 已是升級版
+
+func get_upgrade_diff(upgraded: CardData) -> String:
+    # 「DMG 6 → 9 / COST 1 → 1」對比格式
+    var diffs: Array[String] = []
+    if upgraded.damage != damage:
+        diffs.append("DMG %d → %d" % [damage, upgraded.damage])
+    if upgraded.shield != shield:
+        diffs.append("SHD %d → %d" % [shield, upgraded.shield])
+    ...
+    return "  /  ".join(diffs)
+```
+
+#### 2.2 4 張升級版 .tres（W15.5 範圍）
+
+| 原版 | 升級版 | 變動 |
+|---|---|---|
+| STRIKE (dmg 6) | STRIKE+ (dmg 9) | +50% 傷害 |
+| DEFEND (shd 5) | DEFEND+ (shd 8) | +60% 護盾 |
+| HEAVY (dmg 10) | HEAVY+ (dmg 14) | +40% 傷害 |
+| BASH (dmg 8, 弱 2) | BASH+ (dmg 10, 弱 3) | 傷害 +25% / 弱 +50% |
+
+原版 .tres 加 `upgraded_version = ExtResource("strike_plus.tres")` 連結。
+
+#### 2.3 GameState 升級 method
+
+```gdscript
+func upgrade_card_in_run_deck(original: CardData, upgraded: CardData) -> void:
+    var idx = current_run_deck.find(original)
+    if idx == -1: return
+    current_run_deck[idx] = upgraded
+    EventBus.run_deck_changed.emit(current_run_deck.duplicate())
+```
+
+**只升級第一張同名卡**（不全部升）— 玩家可分批升級多張 STRIKE，增加策略決策。
+
+#### 2.4 Reward UI 區分
+
+```gdscript
+# scripts/reward/reward.gd
+var _options: Array = []   # of Dictionary {type: "add"|"upgrade", ...}
+
+func _build_reward_options() -> Array:
+    var result: Array = []
+    var upg = _try_get_upgrade_option()   # 從 run_deck 找可升級
+    if not upg.is_empty():
+        result.append({"type": "upgrade", "original": upg[0], "upgraded": upg[1]})
+    var add_count = 3 - result.size()
+    for card in CardDatabase.get_reward_options(add_count):
+        result.append({"type": "add", "card": card})
+    result.shuffle()
+    return result
+```
+
+Slot 樣式區分：
+- **add**：白色 modulate，顯示卡名/類型/數值
+- **upgrade**：金色 modulate `(1, 0.92, 0.55)`，顯示「✦ 升級：STRIKE」+「DMG 6 → 9」
+
+#### 2.5 設計取捨
+
+| 決定 | 理由 |
+|---|---|
+| 升級 option 最多 1 個（不是 3 個都升） | 加新卡仍是主流，升級是調味 |
+| 沒可升級卡時 reward 全是 add | 自然降級，不會空 slot |
+| `current_run_deck.find()` 升級第一張同名卡 | O(n) 但 deck 小（< 30 張），不需 hash map |
+| upgrade 版本不再有 upgraded_version | 一階升級，避免 STRIKE+++ 無限升 |
+
+### 3. 觀念點
+
+- **Resource 引用 Resource**：`@export var upgraded_version: CardData` 讓 .tres 內可指向另一個 .tres，Godot 自動序列化引用 path（不是複製整個 resource）
+- **Dictionary 當 sum type**：GDScript 沒 `Union` type，用 `{type: "add"|"upgrade", ...}` Dictionary 表達兩種 variant 是常見 pattern。等同 TypeScript discriminated union。
+- **Premature optimization 避免**：`current_run_deck.find()` 是 O(n)，但 30 張卡的 find 比 hash map 維護成本還低 — 之後 60+ 張再 refactor。
