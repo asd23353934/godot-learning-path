@@ -599,3 +599,109 @@ Slot 樣式區分：
 - **Resource 引用 Resource**：`@export var upgraded_version: CardData` 讓 .tres 內可指向另一個 .tres，Godot 自動序列化引用 path（不是複製整個 resource）
 - **Dictionary 當 sum type**：GDScript 沒 `Union` type，用 `{type: "add"|"upgrade", ...}` Dictionary 表達兩種 variant 是常見 pattern。等同 TypeScript discriminated union。
 - **Premature optimization 避免**：`current_run_deck.find()` 是 O(n)，但 30 張卡的 find 比 hash map 維護成本還低 — 之後 60+ 張再 refactor。
+
+---
+
+## 附錄 B：W15.6 同日補丁 — 撞敵後繼續走剩餘步數（Mario Party 規則）
+
+### 問題
+
+W13 path encounter 設計：擲到 6、撞到 tile 4 的敵人 → 停在 tile 4，剩餘 5 步**作廢**。
+
+UX 問題：玩家覺得「我擲了 6 但只走 1 步是被坑了」。
+
+### 設計選擇
+
+| 規則 | 例子 |
+|---|---|
+| **A. 停下就作廢**（W13 預設） | 擲 6 + 撞 step 1 → 只移 1 格 |
+| **B. 停下後繼續走剩餘**（W15.6 採用） | 擲 6 + 撞 step 1 → 打贏後繼續走 5 格 |
+| C. 走完才結算所有遇到的敵人 | 6 格內遇 3 敵 → 3 場 combat 排隊 |
+
+**B 勝**：符合「擲了的步數該全部走」直覺（Mario Party / 大富翁），又保留即時 path encounter（vs C 的「全走完才結算」會破壞 risk/reward 節奏）。
+
+### 實作
+
+#### GameState 加 state
+
+```gdscript
+var pending_remaining_steps: int = 0   # 戰鬥後要繼續走的步數
+```
+
+reset_for_new_run 內歸零。
+
+#### `_move_player` 簽名改 Dictionary
+
+從原本 `-> bool`（只回 encountered）→ `-> Dictionary {encountered, steps_taken}`，給 caller 算剩餘步數。
+
+```gdscript
+func _move_player(steps: int) -> Dictionary:
+    _is_moving = true
+    %RollDiceButton.disabled = true
+    var encountered = false
+    var taken = 0
+    for i in range(steps):
+        var next_index = (GameState.current_tile_index + 1) % 20
+        await tween.finished
+        GameState.current_tile_index = next_index
+        taken += 1
+        if next_index in GameState.board_enemies:
+            encountered = true
+            break
+    return {"encountered": encountered, "steps_taken": taken}
+```
+
+#### 抽 `_process_movement` orchestrator
+
+```gdscript
+func _process_movement(steps: int) -> void:
+    var result = await _move_player(steps)
+    if result.encountered:
+        var remaining = steps - result.steps_taken
+        GameState.pending_remaining_steps = remaining
+        await _trigger_board_encounter()
+        return
+    var scene_changing = await _resolve_current_tile()
+    if scene_changing: return
+    _is_moving = false
+    %RollDiceButton.disabled = false
+```
+
+從原本 `_on_roll_dice_pressed` 內展開，抽出來讓「自動繼續走」可重用。
+
+#### board._ready 自動繼續
+
+```gdscript
+# 全清檢查在前（全清 → 不繼續走）
+if GameState.board_enemies.is_empty():
+    GameState.pending_remaining_steps = 0
+    _on_all_enemies_cleared()
+    return
+
+# W15.6：戰鬥後若有剩餘步數，自動繼續
+if GameState.pending_remaining_steps > 0:
+    var remaining = GameState.pending_remaining_steps
+    GameState.pending_remaining_steps = 0
+    _is_moving = true                  # 防玩家 race 點擲骰
+    %RollDiceButton.disabled = true
+    %TileInfoLabel.text = "繼續走剩餘 %d 步..." % remaining
+    await get_tree().create_timer(0.5).timeout
+    await _process_movement(remaining)
+```
+
+### 邊界情況
+
+| 情境 | 行為 |
+|---|---|
+| 撞到敵人 A → 戰勝 → 繼續走又撞敵人 B | 自然遞迴：encounter → pending_remaining 累積 → 第二次戰鬥 → 再繼續 |
+| 撞到 boss → 戰勝 → 全清 | 全清優先：board.ready 全清 check → return，剩餘步數歸零（不繼續走 stage 已結束） |
+| 撞到敵人 → 玩家死亡 | RunEndPanel → 主選單；pending_remaining 隨 reset_for_new_run 歸零 |
+| 繼續走時又撞到 COMBAT 格 | _resolve_current_tile 走 COMBAT 路徑切 scene，沒問題 |
+| 玩家在 tile 15 擲 6，boss 在 17 → 戰勝 → 繼續走 4 步 → tile 1（wrap） | 跨 wrap 自然支援（`(i+1) % 20`） |
+
+### 設計取捨
+
+- **單擲骰 = 單回合**：自動繼續走不增加 `turn_number`（保留語意：一次擲骰 = 一個 turn）
+- **0.5 秒延遲**：給玩家「啊我要繼續走了」的視覺準備時間，立刻動會嚇人
+- **撞敵 tile 的底層 tile type 不觸發**：tile 17 是 SHOP 但 boss 死後不開商店（避免雙重事件）
+- **lock 在自動繼續前先設**：防 board.ready 連按鈕 → 0.5s timer 期間玩家手 race 點擲骰
