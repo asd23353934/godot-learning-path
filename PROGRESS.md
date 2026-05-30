@@ -23,7 +23,7 @@
 ```
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
-M3 (W9-W13)  ████████░░  80%  DFS Phase 3-4（戰鬥成熟 + 棋盤）
+M3 (W9-W13)  ██████████  100% DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
 M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
@@ -720,14 +720,53 @@ W12 新觀念：
 ### W13：Phase 4 棋盤 prototype (2/2)
 
 - 目標時數：10-15 hr
-- [ ] 棋盤敵人移動（簡單 random AI）
-- [ ] Path encounter（移動經過觸發戰鬥）
-- [ ] 月底 retro
+- [~] 棋盤敵人移動（W13 hardcode 3 隻固定位置，W14 升級 random AI）
+- [x] Path encounter（per-step collision，撞到停下 + 剩餘步數作廢）
+- [x] 月底 retro（見下方 M3 retro 段）
 
 週記：
 
 ```
+Day 7 後段（2026-05-28）— W13 Phase 4 (2/2) 棋盤 encounter + M3 收尾：
 
+完成範圍：
+- GameState 加 board_enemies / pending_remove_enemy_tile / turn_number 3 欄位
+- reset_for_new_run 設 board_enemies = [4, 11, 17]（hardcode 3 隻起始位置）
+- EventBus 加 enemy_removed_from_board / board_stage_cleared signals
+- board.gd +75 行：
+  · _render_board_enemies（暗紅 24×24 marker，tile 右上角）
+  · _move_player 回 bool + per-step `if next_index in board_enemies` 提前停
+  · _trigger_board_encounter 設 pending_remove + 切 combat
+  · _ready 開頭處理 pending_remove + 檢查 board_enemies.is_empty 觸發勝利
+  · _on_all_enemies_cleared 顯示 STAGE CLEARED + 2 秒回主選單
+- board.tscn 加 EnemiesLeftLabel / TurnLabel
+- _on_roll_dice_pressed 開頭 turn_number += 1
+
+W13 新觀念：
+- 兩階段提交跨場景（pending_remove pattern）
+- per-step collision detection（Mario Party 風格）
+- board enemy ≠ COMBAT tile 設計分離（事件格 vs persistent entity）
+- 勝利條件處理（disable button + 延遲 + scene transition）
+
+設計權衡：
+- W13 enemy 不移動（W14 補完 random AI Step 4.8）
+- W13 無 wave 結構（W14 補完 Step 4.10）
+- W13 無 boss（W14 整合 Step 4.11）
+- 簡化勝利條件：殲滅 hardcode 3 隻而非「第 10 輪 boss」
+
+M3 完成（W9-W13）：
+- W9 Phase 3 (1/3) CardDatabase
+- W10 Phase 3 (2/3) Status Effects
+- W11 Phase 3 (3/3) Combo Lock 招牌 + 11 tests
+- W12 Phase 4 (1/2) 棋盤 prototype
+- W13 Phase 4 (2/2) 棋盤敵人 + path encounter + 勝利
+
+DFS 現況：可完整玩 1 個 stage（主選單 → 棋盤 → 戰鬥 → 棋盤 → ... → 全清勝利）
+
+下一步 M4（W14-W17）：
+- W14-W15 整合（run loop / Boss / reward 三選一）
+- W16 Hub + VN（Dialogic plugin）
+- W17 Save / Settings menu
 ```
 
 ---
@@ -949,7 +988,46 @@ W12 新觀念：
 
 ### M3 retro
 ```
+M3（W9-W13）完成日期：2026-05-28（仍 Day 7，跟 M1+M2 同一天）
 
+完成範圍：
+- W9 CardDatabase（資料化卡牌池）
+- W10 Status Effect 系統（4 種：poison/weak/vulnerable/strength）
+- W11 Combo Lock 招牌（universal multiplier）+ 11 個自寫 combat-formulas tests
+- W12 棋盤 prototype（20 格 closed loop + 擲骰 + 戰鬥銜接）
+- W13 棋盤敵人 + path encounter + 勝利條件
+
+整體心得：
+1. **AI 加速依架構複雜度遞減**：W9 純資料移植超快（30 分內），
+   W10 狀態系統中等（1 hr），W11 Combo Lock 招牌設計花最久（看 spec + 設計 + 實作 + 測試 + UI），
+   W12-W13 棋盤系統中等（layout 數學是亮點）。
+2. **設計決策的紀錄價值最高**：每週 guide 第 2 段「設計決策」是寫了最受用，
+   面試 talking point 直接拿來講。
+3. **跨場景 state pattern 兩次驗證**：W12（current_tile_index）+ W13（pending_remove）都用
+   autoload 暫存 + 場景 _ready 取出。**這是 DFS 規模的關鍵 pattern**。
+4. **踩雷成長**：W12 corner overlap（layout 數學）、W13 沒踩雷（pattern 成熟），
+   表示經驗在累積。
+5. **scope discipline 進步**：W13 主動砍掉 ITEM / SHOP / EVENT 細節到 W14，
+   只保留 path encounter + 勝利兩件事 — 比 W7-W8 時的「全做」更實際。
+
+哪邊輕鬆：
+- W9 CardDatabase（W3.5 / W4 pattern 直接複用）
+- W12 棋盤視覺（Godot Line2D / ColorRect 簡單）
+- 各週 implementation guide 寫作（template 化了）
+
+哪邊超時：
+- W11 Combo Lock spec 閱讀 + 設計（招牌機制要想清楚）
+- W12 corner overlap 第一輪設計錯，第二輪 fix
+
+戰鬥手感評估（DFS Mini-gate W11）：
+- combo 1→2→3 倍率階層清楚
+- 11 張卡分佈 cost 0-2 合理
+- 待測 playtest（W23 polish 階段做）
+
+M4 開工準備：
+- 主要工作：整合 run loop + Hub VN + Save
+- 新挑戰：Dialogic plugin（W16）/ XOR binary save（W17）
+- 預估時間：原計畫 4 週，AI 加速後 1-2 session（看 Hub 設計複雜度）
 ```
 
 ### M4 retro
