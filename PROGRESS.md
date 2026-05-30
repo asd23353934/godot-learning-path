@@ -24,7 +24,7 @@
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ██████████  100% DFS Phase 3-4（戰鬥成熟 + 棋盤）
-M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
+M4 (W14-W17) ██░░░░░░░░  25%  DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
 M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
 ```
@@ -776,13 +776,50 @@ DFS 現況：可完整玩 1 個 stage（主選單 → 棋盤 → 戰鬥 → 棋�
 ### W14：Phase 5 整合 (1/2)
 
 - 目標時數：10-15 hr
-- [ ] 完整 1 個 run loop：選 kit → 進棋盤 → 戰鬥 → 結算 → 再來
-- [ ] 三選一獎勵 UI
+- [x] 完整 1 個 run loop：選 kit → 進棋盤 → 戰鬥 → reward → 棋盤 → ... → 全清結算
+- [x] 三選一獎勵 UI（reward scene + 隨機抽 + click-to-select + Skip）
 
 週記：
 
 ```
+Day 7 後段（2026-05-29 / W14）：M4 開工
 
+完成範圍：
+- GameState 加 current_run_deck（persistent across combats）+ add_card_to_run_deck
+- GameState 加 combats_won_this_run（stage 結算統計用）
+- EventBus 加 4 個 reward signal + run_deck_changed
+- CardDatabase 加 get_reward_options(n)（pool.shuffle 隨機抽 n 張）
+- 新 scene scenes/reward/ — 3 個 Button slot + Skip + 動態填卡資訊
+- combat 戰勝 → reward 取代直接回 board；勝場 +1
+- board 全清 → 結算 panel（HP/gold/turns/combats_won/deck_size）
+
+設計重點：
+1. deck 三層語意分離
+   · current_run_deck（run 持久）
+   · deck（戰鬥 shuffle，每場 duplicate 一份）
+   · hand / discard（戰鬥內）
+   類比 Vuex store vs component-local state
+
+2. 沒複用 Card.tscn 做 reward 視覺
+   · Card 有 _get_drag_data，reward 場景拖卡無意義會誤觸
+   · 改純 Button + 動態 Label fill，單向資料流
+   · prototype 視覺差一點無所謂，M5 美術期統一改
+
+3. stage_cleared_with_stats emit Dictionary 而不是固定參數
+   · 之後加欄位（boss_kills / cards_played / max_combo）不破 API
+   · 等同 REST API 用 JSON object 而不是 positional args
+
+4. reward 選後禁用所有 Slot 防 race
+   · _disable_all_slots() 在 await 前
+   · 玩家在 0.5s 過渡期再點別張就會失效
+
+新觀念：
+- Callable.bind(card) — partial application（GDScript 沒 closure 陷阱，但要在 loop 內 var card）
+- Array.duplicate() vs reference — 戰鬥洗牌不污染 run deck
+- Panel + visible=false 初始隱藏（v-if 思路）
+- 1-shot signal connect pattern（這版 panel 只 show 一次就走，不會二次 enter）
+
+下一週 W15：Boss 戰（DICE_LORD 2 phase）+ 玩家死亡 run end panel 完整化
 ```
 
 ---
