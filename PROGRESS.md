@@ -24,7 +24,7 @@
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ██████████  100% DFS Phase 3-4（戰鬥成熟 + 棋盤）
-M4 (W14-W17) ██░░░░░░░░  25%  DFS Phase 5-6（整合 + Hub Meta）
+M4 (W14-W17) █████░░░░░  50%  DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
 M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
 ```
@@ -827,12 +827,62 @@ Day 7 後段（2026-05-29 / W14）：M4 開工
 ### W15：Phase 5 整合 (2/2) — Boss
 
 - 目標時數：10-15 hr
-- [ ] Boss 戰（DICE_LORD 簡化 2 phase）
+- [x] Boss 戰（DICE_LORD 簡化 2 phase）
+- [x] EnemyData resource（data-driven 敵人，鏡像 CardData 模式）
+- [x] RunEndPanel（玩家死亡結算，對稱 stage clear panel）
+- [x] 修 W14 EnemiesLeftLabel 殘留 cosmetic
 
 週記：
 
 ```
+Day 7 後段（2026-05-29 / W15）：M4 過半
 
+完成範圍：
+- EnemyData resource class（id/hp/attack/phase_2_* 等欄位）
+- rat.tres（HP 18, ATK 5）+ dice_lord.tres（HP 60, ATK 8→12, phase 2 + weak）
+- enemy.gd 重構吃 EnemyData + set_data + phase 2 切換邏輯
+- combat.gd 依 boss_tile_index 決定生哪個 enemy
+- combat.gd 接 phase_changed signal → 顯示 announce banner
+- combat.tscn 加 RunEndPanel（玩家死亡時 show）
+- GameState 加 boss_tile_index / boss_defeated_this_run
+- board 金色大 marker 標 boss tile
+- board stage clear panel 加「Boss：✓ 已擊敗」欄位
+
+設計重點：
+1. data-driven 鏡像 W7 CardData pattern
+   · 同 enemy.gd + 同 enemy.tscn，靠 .tres 決定每隻敵人
+   · 之後加敵人 5 分鐘搞定，純資料化擴充
+   類比 Vue 的 props 傳資料 vs 繼承 component
+
+2. composition over inheritance
+   · 不是 boss.gd extends enemy.gd
+   · 是 EnemyData.has_phase_2 = true
+   · 普通敵也可以開 phase 2（狂戰士低 HP 加力）
+
+3. phase 2 觸發三層守門
+   · _has_phase_2: bool（資料層）
+   · current_phase == 1（避免重複觸發）
+   · float(hp)/float(max_hp) < threshold（避免 int 除法 truncate）
+
+4. RunEndPanel 跟 StageClearPanel 對稱
+   · 都 5 個 stats
+   · 都在原 scene 內 toggle visibility
+   · 都玩家手動點按鈕（不自動 timer 切場景）
+   · 對稱設計 → UX 一致 + 維護成本低
+
+5. boss_tile_index: int（不是 Array）
+   · 1 隻 boss int 足夠，避免 premature abstraction
+   · W18 多 boss 時改 Array 容易（一行）
+
+新觀念：
+- @export var enemy_data: EnemyData（Resource 也能 @export）
+- set_data(data) pattern — 取代 _ready 初始化
+- phase_changed signal 傳「狀態 + 描述」(int, String)
+- int 除法陷阱 vs float(a)/float(b)
+- composition: 行為靠 data flag 而不靠繼承
+
+下一週 W16：Hub 場景 + 2 NPCs + Dialogic plugin VN 對話
+（M4 已 50%，繼續攻 Hub + Save）
 ```
 
 ---

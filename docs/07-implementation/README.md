@@ -24,6 +24,7 @@
 | [W12 / Phase 4 (1/2)](W12-phase-4-board-prototype.md) | 棋盤 prototype — 20 格 closed loop（7+3+7+3）+ 擲骰 + 戰鬥銜接 + 跨場景 state | dice-fate-survivor |
 | [W13 / Phase 4 (2/2)](W13-phase-4-board-encounter.md) | 棋盤敵人 + path encounter + 勝利條件 + **M3 完成** | dice-fate-survivor |
 | [W14 / Phase 5 (1/2)](W14-phase-5-run-loop-reward.md) | Run loop 整合 + 三選一獎勵 + stage clear 結算 panel | dice-fate-survivor |
+| [W15 / Phase 5 (2/2)](W15-phase-5-boss-runend.md) | Boss 2-phase + EnemyData data-driven + Run End panel | dice-fate-survivor |
 
 ## 每篇 guide 的固定結構
 
