@@ -23,7 +23,7 @@
 ```
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
-M3 (W9-W13)  ██████░░░░  60%  DFS Phase 3-4（戰鬥成熟 + 棋盤）
+M3 (W9-W13)  ████████░░  80%  DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ░░░░░░░░░░  0%   DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
 M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
@@ -668,14 +668,51 @@ W11 mini-gate（DFS spec 寫的「自評戰鬥手感」）：跳過，由 user �
 ### W12：Phase 4 棋盤 prototype (1/2)
 
 - 目標時數：10-15 hr
-- [ ] 簡化版棋盤（20 格 closed loop）
-- [ ] 5 種格子（gold / item / event / combat / shop）
-- [ ] 玩家擲骰移動
+- [x] 簡化版棋盤（20 格 closed loop，7+3+7+3 對稱 perimeter）
+- [x] 5 種格子定義（empty / gold / combat / item / shop；gold + combat 完整實作，其他 W13 補）
+- [x] 玩家擲骰移動（1d6 + tween 每格 0.18 秒）
 
 週記：
 
 ```
+Day 7 後段（2026-05-28）— W12 Phase 4 (1/2) 棋盤 prototype：
 
+完成範圍：
+- GameState 加 current_tile_index 欄位（跨場景持續存在）
+- EventBus tile signals 改用 int (enum) tile_type
+- board.gd 重寫成 200+ 行 board controller：
+  · enum TileType { EMPTY, GOLD, COMBAT, ITEM, SHOP }
+  · 20 tile config hardcode（7+3+7+3 perimeter）
+  · _build_tile_positions / _build_tile_visuals / _build_connection_lines / _build_player_avatar
+  · _on_roll_dice_pressed → randi(1,6) → _move_player tween
+  · _resolve_current_tile → match by type（gold add_gold / combat → SceneRouter）
+- board.tscn UI 大改：placeholder buttons → Gold/HP/TilePos/Dice/TileInfo labels + RollDiceButton
+- Combat 結束自動回 board（W7 寫的 code 直接 reusable，autoload state 保留位置）
+
+W12 新觀念：
+- Closed loop modulo 數學：(i+1) % 20 自動閉合
+- Perimeter math：6×6 = 2*6+2*6-4 = 20（corner 重複扣回）
+- Z-order：move_child(line, 0) 把 Line2D 移最底層
+- Tween 鏈：await tween.finished 逐格移動
+- 跨場景 state persistence pattern（autoload current_tile_index）
+- 漸進視覺升級設計（ColorRect → TextureRect 不動 code）
+
+踩過的 bug：
+- 初版 7+3+6+4 layout，左下 corner 重疊頂左 corner，視覺少 1 格
+- 修成 7+3+7+3 對稱
+
+設計討論（寫進 interview-prep / W12 guide）：
+- 為什麼 closed loop 不分岔（W13 補）
+- 為什麼 hardcode config 不 .tres（W14 抽）
+- 為什麼純 2D 不 isometric / 3D（DFS 視覺定位）
+- 為什麼 1d6 不 2d6（節奏 vs 棋盤大小）
+
+下一步 W13：Phase 4 (2/2) 棋盤下半
+- 棋盤敵人移動（基本 random AI）
+- Path encounter（移動經過敵人觸發戰鬥）
+- ITEM / SHOP / EVENT 機制
+- 5 波結構雛形
+- 月底 retro
 ```
 
 ---
