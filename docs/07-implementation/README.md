@@ -28,6 +28,7 @@
 | [W16 / Phase 6 (1/2)](W16-phase-6-hub-vn.md) | Hub 場景 + 2 NPCs + 自寫 DialogPanel + gold 持久化 + 卡商買 starter 卡 | dice-fate-survivor |
 | [W17 / Phase 6 (2/2)](W17-phase-6-save-settings.md) | SaveManager XOR binary + SettingsManager ConfigFile + Settings menu + 升級分階 + **M4 完成** | dice-fate-survivor |
 | [W18 / Phase 7 (1/2)](W18-phase-7-content-cards-enemies.md) | 內容填充 — 5 張新卡 + 10 張升級版 + 3 隻敵人 + draw_cards 機制 + 隨機敵人池 | dice-fate-survivor |
+| [W19 / Phase 7 (2/2)](W19-phase-7-events-qte.md) | 棋盤事件 VN 系統 + ITEM/SHOP tile + QTE 卡（致敬 WorkNite）+ 統一 effect 系統 | dice-fate-survivor |
 
 ## 每篇 guide 的固定結構
 

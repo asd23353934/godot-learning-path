@@ -25,7 +25,7 @@ M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ██████████  100% DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ██████████  100% DFS Phase 5-6（整合 + Hub Meta）
-M5 (W18-W22) ██░░░░░░░░  20%  DFS Phase 7-8（內容 + 美術）
+M5 (W18-W22) ████░░░░░░  40%  DFS Phase 7-8（內容 + 美術）
 M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
 ```
 
@@ -1126,14 +1126,72 @@ Day 8 後段（2026-05-31 / W18）：M5 開工 20%
 ### W19：Phase 7 內容填充 (2/2)
 
 - 目標時數：10-15 hr
-- [ ] 補滿 5-6 道具
-- [ ] 棋盤事件 3-5 種（VN 系統 + 分支）
-- [ ] QTE 卡 1-2 張（致敬 WorkNite）
+- [x] ITEM tile 即時 buff（5 種隨機）+ SHOP tile board 內小商店（取代 inventory）
+- [x] 棋盤事件 VN 系統（EventData/EventChoice resource + 3 個事件 .tres + 分支）
+- [x] QTE 卡（狂亂連擊，致敬 WorkNite）+ QTE overlay mini-game
+- [x] 統一 board effect 系統 + pending combat buff
+- [x] 修 reward 池排除 _plus 升級版 bug
 
 週記：
 
 ```
+Day 8（2026-06-01 / W19）：M5 40%
 
+完成範圍：
+- EventChoice + EventData resource（VN 分支事件 data-driven）
+- 3 個事件 .tres：
+  · 神秘商人（買護身符 next_combat_shield / 買卷軸 add_card / 離開）
+  · 受傷旅人（幫助得 50 gold / 無視）
+  · 古老祭壇（獻血 +5 max HP / 供金 +3 力量 / 離開）
+- GameState.apply_board_effect 統一入口（reducer pattern）
+  · heal / gold / next_combat_shield / next_combat_strength
+  · max_hp / add_random_card / damage / nothing
+  · 回傳結果描述字串給 UI
+- pending_combat_shield/strength（board 撿的 buff 下場戰鬥生效）
+  · combat _ready 在 start_combat_with_deck 後 consume
+- board EVENT/ITEM/SHOP tile 實作（都用 DialogPanel）
+  · EVENT 隨機事件 / ITEM 即時 buff / SHOP board 內小商店
+  · async：await dialog_closed 才 re-enable 骰子（沿用 W14 lock pattern）
+- QTE 卡（狂亂連擊 + 強化版）：
+  · scripts/ui/qte_panel.gd run_qte() coroutine 回傳點擊數
+  · enemy._drop_data 偵測 is_qte → EventBus.qte_requested 解耦
+  · combat 監聽 → 跑 mini-game → 依點擊算傷害（套 strength + combo）
+- 修 reward bug：get_obtainable_cards 排除 _plus 升級版
+
+設計重點：
+1. VN 事件系統對 WorkNite 履歷最關鍵
+   · WorkNite 是 VN/H game 工作室
+   · deckbuilder 套 VN 元素 = 敘事 + 玩法雙軌
+   · data-driven 事件，designer 純編 .tres
+
+2. EventChoice sub-resource vs 平行 array
+   · 每個選項完整物件（label + result + effect 綁一起）
+   · 避免「label 3 個但 effect 2 個」對齊 bug
+
+3. choices 用 untyped Array（型別安全 vs 手寫健壯）
+   · typed array .tres 序列化語法脆弱
+   · 內容期手寫多 → 選健壯
+
+4. 統一 apply_board_effect（reducer pattern）
+   · 事件 / ITEM / SHOP 共用一套效果邏輯（DRY）
+   · 新效果一處加
+
+5. QTE EventBus 解耦
+   · enemy 不需知道 QTE UI 存在
+   · combat 統籌 mini-game（單一職責）
+   · run_qte() coroutine 回傳值 pattern
+
+新觀念：
+- sub-resource 內嵌（一個 .tres 含主 resource + 多個 SubResource）
+- reducer pattern（match type → state change + 回傳描述）
+- coroutine 回傳值（await func() -> int）
+- while + await timer 迴圈讓引擎處理間隙 input
+- pending/deferred state（buff 延後生效）
+- 命名慣例過濾（id.ends_with("_plus")）
+- EventBus 跨 scene 解耦 mini-game
+
+下一週 W20：Phase 8 美術（1/2）— Aria 立繪 + 卡牌 illustration（AI 生圖 + Krita 修）
+（M5 已 40%，進美術期）
 ```
 
 ---
