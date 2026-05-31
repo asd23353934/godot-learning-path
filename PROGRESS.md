@@ -24,7 +24,7 @@
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ██████████  100% DFS Phase 3-4（戰鬥成熟 + 棋盤）
-M4 (W14-W17) █████░░░░░  50%  DFS Phase 5-6（整合 + Hub Meta）
+M4 (W14-W17) ███████░░░  75%  DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
 M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
 ```
@@ -890,13 +890,75 @@ Day 7 後段（2026-05-29 / W15）：M4 過半
 ### W16：Phase 6 Hub + VN
 
 - 目標時數：10-15 hr
-- [ ] Hub 場景（簡單 2D）+ 2 NPCs（訓練師 + 卡牌商）
-- [ ] VN 風對話系統（dialog tree + 分支選項）
+- [x] Hub 場景（取代 W6 placeholder）+ 2 NPCs（訓練師 + 卡牌商）
+- [x] 自寫 VN 風 DialogPanel（speaker / text / choices vbox / chain dialog）
+- [x] Gold 持久化 + permanent_starter_additions（卡商買的卡跨 run）
+- [x] 路由：stage clear → Hub（不是主選單）
 
 週記：
 
 ```
+Day 8（2026-05-30 ~ 05-31 / W16）：M4 75%
 
+完成範圍：
+- scripts/ui/dialog_panel.gd + scenes/ui/dialog_panel.tscn
+  · 可重用 dialog overlay（z_index 50 + dim 70% + inner panel）
+  · show_dialog(speaker, text, choices=[]) API
+  · 空 choices → 自動「繼續」按鈕
+  · caller 自管 close（可 chain dialog）
+- 重做 scenes/hub/hub.tscn：
+  · 標題「中央旅店」+ stats panel（左）+ 2 NPCs（中）+ 按鈕（下）
+  · DialogPanel instance overlay
+- 兩個 NPC：
+  · 訓練師 Akira：+5 maxHP / 50 金，+1 maxEnergy / 100 金
+  · 卡牌商 Mira：3 張隨機卡 / 30 金 → 永久加入 starter deck
+- GameState：
+  · gold 移出 reset 範圍（跨 run 持久化）
+  · 加 gold_earned_this_run（本 run 賺多少）
+  · 加 permanent_starter_additions（卡商買的卡 id 陣列）
+  · reset_for_new_run 內 build_starter_deck 後 append additions
+- 路由：
+  · main_menu 不 reset（只設 kit + 切 Hub）
+  · Hub「開始冒險」才 reset（升完 max HP 立刻生效）
+  · stage clear → Hub（取代主選單，可花錢）
+  · 玩家死亡 → main_menu（保留，run 結束）
+- Stage clear / RunEnd panel 拆「本場獲得 / 總金錢」雙欄
+
+設計重點：
+1. 不裝 Dialogic plugin
+   · W16 scope 2 NPCs × 3 選項，殺雞用牛刀
+   · 自寫 100 行 DialogPanel 學更深（Callable / signal / 動態 spawn）
+   · W18-19 內容期再評估
+   · 也避開 plugin 兼容風險（GdUnit4 災難回憶錄）
+
+2. Hub 才是 run 起點，main_menu 只導航
+   · 修「升完馬上沒效果」UX bug
+   · 路由分職：navigation vs state mutation 分開
+
+3. Gold 持久化 + 雙計數器
+   · 「單一資料、雙視角」pattern
+   · 持久 gold（系統視角，Hub 花用）
+   · gold_earned_this_run（玩家視角，stage clear 顯示）
+
+4. NPC 用 Button 不用 Sprite + Area2D
+   · 內建 hover/focus/pressed 狀態
+   · 子 Control mouse_filter = ignore 讓 click 穿透到父 Button
+   · 之後換 Sprite2D 行為層零變動
+
+5. .bind() partial application pattern
+   · _shop_buy_card.bind(card) 預綁卡資料給 callback
+   · 等同 TS arrow function () => buyCard(card)
+
+新觀念：
+- @export var enemy_data: EnemyData（之前 W15）→ 同 pattern 但 hub 用 in-code data 不 resource
+- Callable.is_valid() 檢查
+- DialogPanel z_index 50 overlay pattern（與 W15.5 StageClearPanel z_index 100 對齊）
+- mouse_filter 子元素 ignore 讓 Button click 穿透（CSS pointer-events: none）
+- 路由：main_menu → Hub → board → reward → board → ... → stage clear → Hub
+  vs 死亡：combat → RunEndPanel → main_menu
+
+下一週 W17：永久升級結算 + Save/Load + Settings menu + M4 月底 retro
+（M4 已 75%，再一週收尾 M4）
 ```
 
 ---
