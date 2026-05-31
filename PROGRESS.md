@@ -24,7 +24,7 @@
 M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ██████████  100% DFS Phase 3-4（戰鬥成熟 + 棋盤）
-M4 (W14-W17) ███████░░░  75%  DFS Phase 5-6（整合 + Hub Meta）
+M4 (W14-W17) ██████████  100% DFS Phase 5-6（整合 + Hub Meta）
 M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
 M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
 ```
@@ -966,15 +966,86 @@ Day 8（2026-05-30 ~ 05-31 / W16）：M4 75%
 ### W17：Phase 6 Save / Settings
 
 - 目標時數：10-15 hr
-- [ ] 永久升級（HP 2 階 / 能量 1 階）
-- [ ] Save / load（XOR 加密 binary，1 slot）
-- [ ] Settings menu（解析度 / 音量 / 語言）
-- [ ] 月底 retro
+- [x] 永久升級分階 cap（HP max 2 階 / Energy max 1 階）
+- [x] Save / load（XOR 加密 binary，user://save.dat）
+- [x] Settings menu（解析度 3 檔 / 全螢幕 / master/bgm/sfx 音量 / 重置存檔）
+- [x] SaveManager autoload + SettingsManager 升級實作
+- [x] 月底 retro
 
 週記：
 
 ```
+Day 8 後段（2026-05-31 / W17）：M4 收尾 100%
 
+完成範圍：
+- scripts/autoload/save_manager.gd（新 autoload）
+  · XOR(0x42) 加密 binary（JSON → utf8 → xor → 寫 user://save.dat）
+  · save_game / load_game / delete_save / save_exists API
+  · SAVE_VERSION = 1（之後加 migration 用）
+  · _ready 自動 load 既有 save
+- scripts/autoload/settings_manager.gd（stub → 完整實作）
+  · ConfigFile 存 user://settings.cfg（明文，玩家本該能改）
+  · 解析度 3 檔（1280×720 / 1600×900 / 1920×1080）
+  · 全螢幕 toggle / master/bgm/sfx volume sliders / locale 預留
+  · _ready apply_settings 套到 DisplayServer + AudioServer
+  · setter 自動 apply + save
+- scenes/settings/ + scripts/...（新 scene）
+  · OptionButton 解析度 / CheckBox 全螢幕 / 3 HSlider 音量
+  · 顯示存檔狀態 + 「重置存檔」按鈕（含 destructive 二次確認 dialog）
+  · 返回主選單按鈕
+- GameState 加分階 cap：
+  · MAX_HP_UPGRADE_CAP = 2（每階 +5，最終 max 90）
+  · MAX_ENERGY_UPGRADE_CAP = 1（每階 +1，最終 max 4）
+  · max_hp_upgrade_purchases / max_energy_upgrade_purchases 計數器
+  · can_upgrade_max_hp() / can_upgrade_energy() helpers
+  · reset_permanent_state() 完整重置（重置存檔用）
+- Hub 整合：
+  · 訓練師 dialog 顯示「N/MAX 階」進度
+  · 達 cap → 按鈕變「已達上限」+ 點下顯示 capped msg
+  · 升級 / 買卡後立刻 SaveManager.save_game()
+- 路由：main_menu Settings 按鈕連到 settings scene
+- project.godot 加 SaveManager 進 autoload 順序
+
+設計重點：
+1. 雙存檔分離（Save vs Settings 不同檔案）
+   · save.dat（XOR 加密，存進度，防止手改 gold）
+   · settings.cfg（明文 ConfigFile，存偏好，玩家本來就該能改）
+   · 不同檔案 = 重置存檔不會掉設定
+
+2. XOR 加密是 casual mod prevention，不是真加密
+   · key 寫在 source code，會 reverse engineer 的人擋不住
+   · 但檔案打開是 binary 看不到「gold = 999」這種明顯字串
+   · 90% 場景夠用，商業作品才需要 HMAC + AES
+   · 之後 W23+ 可升級
+
+3. 自動 save 策略
+   · 升級 / 買卡 → 立刻 save（meta state change）
+   · 不每 frame / 每 gold change save（過度 I/O）
+   · main_menu enter → load（_ready autoload 自動）
+
+4. 升級分階 cap 防爆破
+   · 之前無限買 HP → 玩家撐到不會死 → 戰鬥失去意義
+   · HP 2 階 / Energy 1 階是「成長感 + 不破壞挑戰」平衡點
+   · 雖然只多 10 HP / 1 energy，但 boss phase 2 攻擊 12 + weak 仍能壓力
+
+5. setter pattern → apply + save 一條龍
+   · set_master_volume(v) 自動 apply (套到 bus) + save_settings
+   · UI 改 slider 立刻聽到音量變 + 設定持久
+   · 不用「套用」按鈕，UX 更直覺
+
+新觀念：
+- ConfigFile API（INI-like，set/get_value(section, key, default)）
+- FileAccess.open + store_buffer / get_buffer（binary I/O）
+- PackedByteArray inplace 操作
+- JSON.stringify / JSON.new().parse（Godot 4 取代 4.0 的 .parse_string）
+- DisplayServer.window_set_mode / window_set_size
+- AudioServer.set_bus_volume_db + linear_to_db（音量是 dB scale 不是 linear）
+- linear_to_db(0) = -inf 陷阱（要 clamp max(v, 0.0001)）
+- OptionButton / CheckBox / HSlider 三個 UI control 整合
+- Autoload _ready 順序（後面的 autoload 可以呼叫前面的 autoload）
+
+下一週 W18：M5 開工 — Phase 7 內容填充（補滿卡 + 敵人）
+（M4 已 100%，整體 17/26 週 = 65%）
 ```
 
 ---
@@ -1181,7 +1252,71 @@ M4 開工準備：
 
 ### M4 retro
 ```
+M4（W14-W17）完成日期：2026-05-31（仍 Day 8，跟 M1-M3 同密度）
 
+完成範圍：
+- W14 Run loop 整合 + 三選一獎勵 + stage clear 結算 panel
+- W15 Boss 2-phase + EnemyData data-driven + Run End panel
+  · W15.5 補丁：升級卡 reward + 卡牌升級系統
+  · W15.6 補丁：撞敵後繼續走剩餘步數（Mario Party 規則）
+- W16 Hub + 2 NPCs + 自寫 VN dialog + gold 持久化
+- W17 SaveManager + SettingsManager 實作 + 分階 cap
+
+整體心得：
+1. **多迭代補丁是常態**：W15 寫完後立刻發現 5 個 UI/UX/規則 bug，
+   反覆補強到 W15.5 / W15.6 才真正穩固。
+   M3 是「設計新功能」期，M4 變成「設計 + 整合 + UX 細修」期。
+   AI 加速很適合迭代式補強，每次 commit 都是 self-contained。
+
+2. **自寫 vs plugin 取捨**：W16 沒裝 Dialogic，
+   自寫 100 行 DialogPanel 學到的東西比裝 plugin 多很多。
+   類似 W11 沒用 GdUnit4 自寫 test_runner 的決策。
+   原則：**scope 小 + 學習導向 → 自寫**，**scope 大 + 生產導向 → plugin**。
+   M5 內容期再考慮 plugin（Dialogic for 棋盤 EVENT 對話樹）。
+
+3. **路由設計反覆修正**：
+   - W6 main_menu → Hub 是 placeholder
+   - W14 main_menu → reset → board（跳過 Hub）
+   - W16 main_menu → Hub（不 reset），Hub「開始冒險」才 reset
+   - W17 Settings 進入點加上 main_menu
+   反覆改路由是因為每階段「meta state」概念逐漸成形。
+   teach me：路由設計要等 state model 穩定再定，不要太早 hardcode。
+
+4. **persistence 設計分層**：
+   - Run state（player_hp / hand / current_tile）：per-run，不存
+   - Permanent state（gold / upgrades / additions）：跨 run，存 XOR binary
+   - User preferences（volume / resolution）：跨 install，存 ConfigFile 明文
+   三層各有特性，混在一起就是技術債。
+
+5. **2 個踩雷被記進 errors.md**：
+   - W14 race condition（_move_player re-enable 時機）
+   - W15.5 dialog z-index 沒蓋住下層
+   都是「async + UI」結構性問題，未來 reference 價值高。
+
+哪邊輕鬆：
+- W14 reward scene（純 UI 邏輯，pattern 化）
+- W17 SaveManager（教科書 XOR + JSON pattern）
+- W17 SettingsManager（ConfigFile API 直觀）
+
+哪邊超時：
+- W15 EnemyData 重構（要兼顧 W7 既有 @export 路徑不破）
+- W16 Hub UI 排版（Button 內子元素 mouse_filter 陷阱）
+- W15.5 z_index 跨 scene UI 層級理清楚
+
+M5 開工準備（W18-W22）：
+- W18-19 Phase 7 內容填充（卡牌、敵人、棋盤事件）
+- W20-22 Phase 8 美術 + Live2D（Aria 立繪）
+- 預估時間：原計畫 5 週，AI 加速後 2-3 sessions（內容期可大量複用）
+
+M4 最大收穫：DFS 從 prototype 變成 **完整的 meta loop game**：
+玩家有理由跨 run 玩下去（gold 累積 → Hub 升級 → 下次更強），
+有理由挑戰 boss（boss_defeated_this_run 解鎖未來成就），
+存檔讓挫敗不會「歸零」，遊戲開始有「永續價值」。
+
+從技術角度，DFS 現在的架構已經能承擔 **shipping 級別的遊戲**：
+data-driven（CardData / EnemyData）+ event-driven（EventBus）+
+state-driven（GameState）+ scene-routed（SceneRouter）+ persisted（SaveManager）。
+之後 M5-M6 是內容 + 美術 + 投履歷，技術層不需大改了。
 ```
 
 ### M5 retro

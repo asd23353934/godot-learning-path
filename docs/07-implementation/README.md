@@ -26,6 +26,7 @@
 | [W14 / Phase 5 (1/2)](W14-phase-5-run-loop-reward.md) | Run loop 整合 + 三選一獎勵 + stage clear 結算 panel | dice-fate-survivor |
 | [W15 / Phase 5 (2/2)](W15-phase-5-boss-runend.md) | Boss 2-phase + EnemyData data-driven + Run End panel | dice-fate-survivor |
 | [W16 / Phase 6 (1/2)](W16-phase-6-hub-vn.md) | Hub 場景 + 2 NPCs + 自寫 DialogPanel + gold 持久化 + 卡商買 starter 卡 | dice-fate-survivor |
+| [W17 / Phase 6 (2/2)](W17-phase-6-save-settings.md) | SaveManager XOR binary + SettingsManager ConfigFile + Settings menu + 升級分階 + **M4 完成** | dice-fate-survivor |
 
 ## 每篇 guide 的固定結構
 
