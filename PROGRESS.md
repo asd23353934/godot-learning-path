@@ -25,7 +25,7 @@ M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ██████████  100% DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ██████████  100% DFS Phase 5-6（整合 + Hub Meta）
-M5 (W18-W22) ░░░░░░░░░░  0%   DFS Phase 7-8（內容 + 美術）
+M5 (W18-W22) ██░░░░░░░░  20%  DFS Phase 7-8（內容 + 美術）
 M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
 ```
 
@@ -1055,13 +1055,70 @@ Day 8 後段（2026-05-31 / W17）：M4 收尾 100%
 ### W18：Phase 7 內容填充 (1/2)
 
 - 目標時數：10-15 hr
-- [ ] 補滿 10-15 張卡 .tres
-- [ ] 補滿 4-5 敵人 + DICE_LORD
+- [x] 補滿 16 base + 9 upgrade = 25 張卡（5 新 + 10 升級版）
+- [x] 補滿 5 隻敵人（4 普通 + 1 boss DICE_LORD）
+- [x] 加 draw_cards 機制（POMMEL_STRIKE / BATTLE_TRANCE / +）
+- [x] per-encounter 隨機敵人池
 
 週記：
 
 ```
+Day 8 後段（2026-05-31 / W18）：M5 開工 20%
 
+完成範圍：
+- CardData 加 draw_cards: int 欄位 + get_upgrade_diff 加抽牌差異
+- enemy.gd _drop_data 整合 draw_cards（discard 後執行避免順序坑）
+- 5 張新卡：
+  · INFLAME（POWER, cost 1, +2 strength — Power build 低 cost 起手）
+  · IRON WAVE（ATTACK, cost 1, dmg 5 + shield 5 — 攻防一體）
+  · SURVIVOR（SKILL, cost 1, shield 8 — 高護盾撐致命）
+  · BATTLE TRANCE（SKILL, cost 0, draw 3 — 爆發 tempo）
+  · POMMEL STRIKE 修正（原 desc 寫抽 1 但沒實作 → 補實作 draw_cards = 1）
+- 5 張既有卡的升級版（補齊升級樹）：
+  · CLEAVE+ / QUICK+ / PARRY+ / BRACE+ / FOCUS+
+  · 加上 5 張新卡的升級版總共 10 張 _plus.tres
+- 3 隻新敵人：
+  · 腐肉史萊姆（HP 25, ATK 6, 攻擊施加 weak 1）
+  · 鐵刺獵犬（HP 22, ATK 9 高, 攻擊施加 vulnerable 1）
+  · 石牢守衛（HP 40, ATK 7→11 phase 2, 精英非 boss！）
+- combat.gd 改：
+  · NON_BOSS_POOL 4 隻敵人 const array
+  · _decide_enemy_data 普通 tile 隨機選一個
+  · boss tile 仍 DICE_LORD
+
+設計重點：
+1. 起始 deck 不變（保 W10-W15 平衡）
+   · 新卡只透過 reward / 卡商解鎖
+   · 玩家「贏戰鬥」才解鎖 build path
+
+2. draw_cards 在 discard 後執行
+   · 避免本卡自己被洗進新 hand 的順序坑
+   · 設計小細節但影響 BATTLE_TRANCE 計數正確性
+
+3. STONE_GUARD 精英 = has_phase_2 + is_boss = false
+   · 證明 W15 EnemyData composition 設計成立
+   · 「phase 2」是 capability，「boss」是 categorization，解耦
+   · 玩家被切階段嚇到 = 自然 surprise mechanic
+
+4. 升級規則「不改 cost 為主」
+   · 除 FOCUS 是 Power 卡標準 cost-1 升級
+   · 保持 deck combo curve 穩定
+
+5. 純資料 driven 擴展
+   · W18 大半時間在編 .tres，code 改不到 20 行
+   · 對比傳統「每卡 = 一個 script」設計
+   · 擴展是 N+1 而不是 N×M
+   · designer-level 內容生成（不需 coder）
+
+新觀念：
+- @export var draw_cards: int = 0（向下相容加新欄）
+- Array[EnemyData] const + randi() % size weighted future
+- composition: has_phase_2 ≠ is_boss
+- 內容期：code 動少，data 動多
+- 25 張卡 / 5 隻敵人 reward pool / encounter pool 容量平衡
+
+下一週 W19：補滿 5 卡 + 5 敵人 + 棋盤事件 3-5 種 + QTE 卡（致敬 WorkNite）
+（M5 已 20%，內容期繼續）
 ```
 
 ---
