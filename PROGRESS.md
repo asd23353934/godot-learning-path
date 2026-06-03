@@ -1199,13 +1199,45 @@ Day 8（2026-06-01 / W19）：M5 40%
 ### W20：Phase 8 美術 (1/2) — Aria 立繪
 
 - 目標時數：10-15 hr
-- [ ] AI 生 5-8 張 Aria 立繪
-- [ ] 10-15 張卡 illustration（AI + Krita 修）
+- [~] AI 生 5-8 張 Aria 立繪（**素材準備中 — user 端用 AI 工具/手繪產出**）
+- [~] 10-15 張卡 illustration（同上）
+- [x] 美術素材需求規格書（DFS repo `docs/04-art/art-asset-spec.md`）
 
 週記：
 
 ```
+Day 8（2026-06-01 / W20 起步）：美術期，分工待素材
 
+決策點（AskUserQuestion）：
+- 實際立繪/插圖 AI agent 產不出圖檔，需 user 用 AI 工具/手繪
+- user 選「先去準備真圖」→ 這輪不寫整合 code，先給素材規格
+
+完成範圍：
+- 寫 docs/04-art/art-asset-spec.md 素材需求規格：
+  · 風格基調表（畫風/色調/線條，先定一致性）
+  · 優先級分層 P0/P1/P2（別一次 30 張）
+    - P0：5 敵人 + 4 背景 + 1 Aria（10 張，demo 有臉）
+    - P1：2 NPC + 核心 10 卡圖
+    - P2：剩餘卡圖 + 多表情 + UI 框
+  · 各類尺寸/格式規格表
+  · 命名約定：檔名 = id（card.id "strike" → assets/cards/strike.png）
+  · AI 工具建議（NovelAI 立繪 / MJ 背景 / SD 免費可控）
+  · 去背工具（rembg / Photopea）
+  · 我端整合計畫（art_path + TextureLoader fallback 色塊，漸進式）
+
+設計重點：
+1. 「約定優於配置」命名
+   · 檔名 = id → 整合用 "res://assets/cards/%s.png" % card.id
+   · 找不到圖自動 fallback 色塊 → 漸進整合，丟一張套一張
+   · user 純丟檔案就生效，不用改 .tres
+
+2. 優先級分層避免 burnout
+   · 內容期最怕「一次做 30 張圖累垮」
+   · P0 最小集（10 張）先讓 demo 有臉
+   · CP 值最高第一批：5 隻敵人（戰鬥畫面立刻變樣）
+
+狀態：等 user 準備素材，任一批好了 → 我做整合（漸進式）
+下一步（user）：依 spec 用 AI 工具產 P0 素材（建議先 5 敵人）
 ```
 
 ---
