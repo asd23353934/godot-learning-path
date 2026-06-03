@@ -1199,9 +1199,10 @@ Day 8（2026-06-01 / W19）：M5 40%
 ### W20：Phase 8 美術 (1/2) — Aria 立繪
 
 - 目標時數：10-15 hr
-- [~] AI 生 5-8 張 Aria 立繪（**素材準備中 — user 端用 AI 工具/手繪產出**）
-- [~] 10-15 張卡 illustration（同上）
-- [x] 美術素材需求規格書（DFS repo `docs/04-art/art-asset-spec.md`）
+- [x] 美術素材需求規格書 + NovelAI prompt 範本（DFS `docs/04-art/`）
+- [x] 第一批素材生成（NovelAI V4.5）：5 隻敵人 + Aria 立繪
+- [x] 第一批整合：敵人 TextureRect + 主選單 Aria（fallback 色塊設計）
+- [~] Hub NPC（Akira/Mira）/ 16 張卡圖 / 4 背景（待生）
 
 週記：
 
@@ -1238,6 +1239,31 @@ Day 8（2026-06-01 / W20 起步）：美術期，分工待素材
 
 狀態：等 user 準備素材，任一批好了 → 我做整合（漸進式）
 下一步（user）：依 spec 用 AI 工具產 P0 素材（建議先 5 敵人）
+
+---
+Day 9（2026-06-04 / W20 第一批整合）：
+
+user 用 NovelAI V4.5 生圖 + AI 端整合：
+- 畫風錨點確定（鎖定沿用）：
+  · 人物（Aria/NPC）：visual novel style, soft lighting, detailed
+  · 敵人：anime style, cel shading, flat color, bold outline, 2d
+  · Aria 定調圖 seed 1337154819
+- 第一批生成 + 整合：5 隻敵人 + Aria 立繪
+  · enemy.tscn Body 加 EnemyTexture（keep_aspect_covered / 預設 hidden）
+  · enemy.gd _load_enemy_texture（ResourceLoader.exists → fallback 色塊）
+  · main_menu 加 AriaPortrait
+- 約定優於配置：id → assets/<type>/<id>.png，純丟檔生效
+
+踩雷 / 學到（已記 memory art_pipeline）：
+- NovelAI tag 系統（非自然語言句），{}加權 []減弱
+- Story/Text Adventure ≠ Image Generation（一開始開錯功能）
+- child + 性化 tag = 審查 + itch.io/Steam 上架紅線（避坑）
+- 手是 AI 生圖最弱點 → 半身不露手構圖規避
+- NovelAI 怪物易跑寫實，detailed/soft lighting 推寫實 → cel shading/flat color 拉回卡通
+- 白底意外解決：敵人 PanelContainer 卡片框襯底 → 像 deckbuilder 敵人卡，免去背
+
+待生（漸進整合）：Hub NPC（akira/mira）/ 16 卡圖 / 4 背景
+下次接續：user 生 NPC → 整合 hub.tscn NPC ColorBlock → TextureRect
 ```
 
 ---
