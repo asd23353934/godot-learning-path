@@ -1328,15 +1328,45 @@ Day 9-10（2026-06-04 ~ 06-07 / W21）：M5 70%
 ### W22：Phase 9 polish 開始
 
 - 目標時數：10-15 hr
-- [ ] 戰鬥 hit pause / screen shake / 飄字
+- [~] 戰鬥 hit pause / screen shake / 飄字（飄字+shake 已於 W21 提前做，hit pause 待）
 - [ ] Tutorial 5 popup
-- [ ] i18n 補完（繁中 + 英文）
+- [~] i18n：繁英雙語系統完成（主選單 + 設定），其他場景字串漸進補
 - [ ] 月底 retro
 
 週記：
 
 ```
+Day 10（2026-06-07 / W22 開工）：i18n 基礎
 
+完成範圍：
+- SettingsManager i18n：
+  · TRANSLATIONS_EN 翻譯表（中文當 key → 英文）
+  · _build_translations 程式建 en + zh_TW(identity) Translation（免 CSV import GUI）
+  · apply_settings / set_locale 套 TranslationServer.set_locale
+- 設定選單加「語言」下拉（繁體中文 / English），即時切換
+- 靜態 UI（按鈕/標籤 text）靠 Godot auto_translate 自動翻，.tscn 不用改
+- 動態字串（存檔狀態行 / 刪除確認 dialog）手動 tr() 包
+  · _notification(NOTIFICATION_TRANSLATION_CHANGED) 切語言時重整動態字串
+
+設計重點：
+1. 中文當 key（非語意 key）：.tscn text 不改，CSV-free，最快起步
+2. zh_TW identity translation 防 fallback：只建 en 會讓 zh_TW 模式 fallback 到 en（踩過）
+3. 靜態 auto_translate vs 動態 tr()：兩種 i18n 路徑要分清
+4. 範圍控制：先系統 + 主選單/設定，其他場景漸進（填表即可，不改架構）
+
+新觀念：
+- TranslationServer.add_translation / set_locale
+- Translation.new() + add_message（程式建翻譯，免 CSV import）
+- Control auto_translate（text 自動經 TranslationServer）
+- NOTIFICATION_TRANSLATION_CHANGED（locale 變時重整動態 UI）
+- TranslationServer fallback 機制（無當前 locale translation → fallback 其他 locale）
+
+待辦（漸進補）：
+- 戰鬥 / 棋盤 / Hub / 事件 / 卡牌場景字串（加進翻譯表）
+- hit pause（W22 polish 剩餘）+ tutorial popup
+
+下一步：W22 續 — hit pause / tutorial，或漸進補各場景 i18n
+（M5 收尾中，W22 進行）
 ```
 
 ---
