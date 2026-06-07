@@ -1328,8 +1328,8 @@ Day 9-10（2026-06-04 ~ 06-07 / W21）：M5 70%
 ### W22：Phase 9 polish 開始
 
 - 目標時數：10-15 hr
-- [~] 戰鬥 hit pause / screen shake / 飄字（飄字+shake 已於 W21 提前做，hit pause 待）
-- [ ] Tutorial 5 popup
+- [x] 戰鬥 hit pause / screen shake / 飄字（命中凍結 + 震動 + 飄字 + hit 音 協同打擊感）
+- [x] Tutorial（首次戰鬥 3 步引導 popup；棋盤等其他漸進）
 - [~] i18n：繁英雙語系統完成（主選單 + 設定），其他場景字串漸進補
 - [ ] 月底 retro
 
@@ -1361,12 +1361,19 @@ Day 10（2026-06-07 / W22 開工）：i18n 基礎
 - NOTIFICATION_TRANSLATION_CHANGED（locale 變時重整動態 UI）
 - TranslationServer fallback 機制（無當前 locale translation → fallback 其他 locale）
 
-待辦（漸進補）：
-- 戰鬥 / 棋盤 / Hub / 事件 / 卡牌場景字串（加進翻譯表）
-- hit pause（W22 polish 剩餘）+ tutorial popup
+hit pause + 新手教學（同 Day 10 續做）：
+- hit pause：combat 敵人受擊 Engine.time_scale→0.05（0.06s real-time timer）→ 打擊頓挫感
+  · 與飄字 / hit 音 / 震動協同；_hit_stopping 防多段傷害重疊
+- 新手教學：combat static _seen_tutorial flag，首次戰鬥彈 AcceptDialog 3 步 chain
+  （拖卡 / Combo / 結束回合），套全域暗色 theme
 
-下一步：W22 續 — hit pause / tutorial，或漸進補各場景 i18n
-（M5 收尾中，W22 進行）
+待辦（漸進補）：
+- 各場景 i18n 字串（戰鬥 / 棋盤 / Hub / 事件 / 卡牌，加進翻譯表）
+- 棋盤等其他 tutorial popup
+- 真音效素材 + BGM
+
+下一步：漸進補（i18n / 音效 / tutorial）或 M5 收尾 retro
+（M5 收尾中，W22 主要項已完成）
 ```
 
 ---
