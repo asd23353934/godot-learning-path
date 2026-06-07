@@ -25,7 +25,7 @@ M1 (W1-W4)   ██████████  100% Godot 基礎 + 2 tutorial
 M2 (W5-W8)   ██████████  100% DFS Phase 0-2（戰鬥 prototype）
 M3 (W9-W13)  ██████████  100% DFS Phase 3-4（戰鬥成熟 + 棋盤）
 M4 (W14-W17) ██████████  100% DFS Phase 5-6（整合 + Hub Meta）
-M5 (W18-W22) ████░░░░░░  40%  DFS Phase 7-8（內容 + 美術）
+M5 (W18-W22) ███████░░░  70%  DFS Phase 7-8（內容 + 美術 + 音效）
 M6 (W23-W26) ░░░░░░░░░░  0%   收尾 + Live2D + 履歷
 ```
 
@@ -1268,17 +1268,59 @@ user 用 NovelAI V4.5 生圖 + AI 端整合：
 
 ---
 
-### W21：Phase 8 美術 (2/2) — UI + 互動
+### W21：Phase 8 美術 (2/2) — UI + 音效 + 動畫探索
 
 - 目標時數：10-15 hr
-- [ ] 卡牌邊框 + UI（Figma）
-- [ ] AnimatedSprite2D + Tween + Area2D 互動角色
-- [ ] BGM 3-5 首 + SFX 20-30 個
+- [x] 卡牌邊框 + UI（暗色 Theme + StyleBox + 全場景按鈕動畫 + 視窗 aspect=keep）
+- [x] 戰鬥 juice（hit flash / shake / 飄字 — 提前做 W22 polish 項）
+- [s] AnimatedSprite2D 互動角色 → 轉 Live2D 平行軌（程式變形驗證為 Godot 死路）
+- [~] BGM + SFX：SFX 系統完成（placeholder 暫定待換），BGM API ready 待素材
 
 週記：
 
 ```
+Day 9-10（2026-06-04 ~ 06-07 / W21）：M5 70%
 
+完成範圍：
+- AudioManager stub → 完整音效系統：
+  · 程式動態建 BGM / SFX 兩條 audio bus（送 Master），不靠編輯器 bus layout
+  · SFX player pool（8 個，輪流用避免互相切斷）
+  · id 約定載入（play_sfx("hit") → assets/audio/sfx/hit.ogg），沒檔靜默跳過
+  · 自動接 EventBus 6 signal 播 SFX（出牌/打擊/治療/擲骰/勝負/獎勵）→ 零場景改動
+  · BGM play/stop + crossfade + 循環 API（待素材）
+- SettingsManager set_bgm/sfx_volume 串接 AudioManager（即時套 bus）
+- placeholder SFX（_gen_sfx.py Python 合成 7 個 .wav，暫定驗證用）
+- 暗色主題 main_theme.tres 補 disabled style + padding
+
+動畫探索（重要工程判斷）：
+- 目標：讓單張 Aria 立繪「分部位動」
+- 依序試 6 種程式法全失敗（單圖 Tween / GDCubism / Skeleton2D weight paint /
+  cutout / 程式 rigged Polygon2D / 直接推 mesh internal vertex）
+- 根因：Godot Polygon2D 內部頂點單獨改不渲染（只配合骨架），骨架 deform 又官方 buggy
+- 結論：單張立繪在 Godot 硬做骨架動畫是引擎本質死路，正規解 = Live2D（對口 WorkNite）
+- 決策：平行進行 — 遊戲開發不停，有空學 Cubism，GDCubism 編譯整合由 AI 代勞
+- 產出：docs/04-art/live2d-roadmap.md（DFS repo，三階段路線圖）+ aria_nobg.png 去背
+
+設計重點：
+1. EventBus 解耦音效（零場景改動加音效）= W3 學的 observer pattern 實戰
+2. id 約定 + fallback（架構先行、內容漸進填，與美術 id→png 一致）
+3. 架構 ≠ 素材：placeholder 先驗證系統，真音效之後覆蓋同名檔
+4. 動畫 retro 是面試亮點：除錯深度 + 知道何時止損 + 選對工具
+
+新觀念：
+- AudioServer.add_bus / set_bus_send / set_bus_volume_db
+- linear_to_db(0) = -inf 陷阱（clamp max(v, 0.0001)）
+- AudioStreamPlayer pool pattern
+- AudioStream loop（Ogg/MP3 .loop vs WAV .loop_mode 不同 class）
+- Polygon2D internal_vertex_count 只配合 Skeleton2D 才渲染
+
+待辦（W21 收尾遺留 → 漸進補）：
+- 真 SFX 素材（覆蓋 placeholder）
+- BGM 素材 + 場景接 play_bgm
+- Aria Live2D（平行軌）
+
+下一步 W22：Phase 9 polish（hit pause / tutorial / i18n）
+（M5 已 70%，W22 後 M5 收尾進 M6）
 ```
 
 ---
